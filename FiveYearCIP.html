@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full CIP Budget Detail</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #e5e7eb;
+        }
+        .table-header {
+            background-color: #374151;
+            position: sticky;
+            top: 0;
+        }
+        .category-row {
+            background-color: #1f2937;
+            font-weight: bold;
+        }
+        .grand-total-row {
+            background-color: #111827;
+            font-weight: bold;
+            border-top: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+<body class="p-4 lg:p-8">
+
+    <main class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-white">CIP 5-Year Detailed Budget</h1>
+                <p class="text-lg text-gray-400">Pico Rivera, CA</p>
+            </div>
+            <a href="#" id="dashboard-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Budget Table -->
+        <div class="overflow-x-auto rounded-lg border border-gray-700">
+            <table class="w-full text-sm text-left text-gray-400">
+                <thead class="text-xs text-gray-300 uppercase table-header">
+                    <tr>
+                        <th class="p-3">Project Name</th>
+                        <th class="p-3 text-right">FY 24-25</th>
+                        <th class="p-3 text-right">FY 25-26</th>
+                        <th class="p-3 text-right">FY 26-27</th>
+                        <th class="p-3 text-right">FY 27-28</th>
+                        <th class="p-3 text-right">Total Budget</th>
+                    </tr>
+                </thead>
+                <tbody id="budget-table-body">
+                    <!-- Table content will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const data = {
+            categories: [
+                { name: "Streets", total: 67948605 },
+                { name: "Bridges", total: 66619495 },
+                { name: "Water", total: 31433683 },
+                { name: "Parks", total: 45960866 },
+                { name: "Facilities", total: 18739048 },
+                { name: "Traffic", total: 5978497 },
+                { name: "Storm Drains", total: 6274873 }
+            ],
+            grandTotal: { fy25: 32234400, fy26: 40566925, fy27: 41027072, fy28: 14940000, total: 242955068 },
+            allProjects: [
+                { id: 'S1', name: 'Annual Sidewalk Improvements Project', category: 'Streets', fy25: 270000, fy26: 270000, fy27: 270000, fy28: 270000 },
+                { id: 'S2', name: 'Annual Signing and Striping Project', category: 'Streets', fy25: 120000, fy26: 120000, fy27: 120000, fy28: 0 },
+                { id: 'S3', name: 'Major Corridors Median Beautification Project', category: 'Streets', fy25: 400000, fy26: 400000, fy27: 0, fy28: 0 },
+                { id: 'S4', name: 'Safe Routes to School', category: 'Streets', fy25: 400000, fy26: 400000, fy27: 400000, fy28: 400000 },
+                { id: 'S5', name: 'Street Light Pole Replacement Project', category: 'Streets', fy25: 200000, fy26: 200000, fy27: 200000, fy28: 200000 },
+                { id: 'S6', name: 'Traffic Calming Project', category: 'Streets', fy25: 300000, fy26: 300000, fy27: 300000, fy28: 300000 },
+                { id: 'S7', name: 'Whittier Boulevard Street Improvements', category: 'Streets', fy25: 10000000, fy26: 10000000, fy27: 0, fy28: 0 },
+                { id: 'S8', name: 'Residential Street Improvements Project', category: 'Streets', fy25: 2500000, fy26: 2500000, fy27: 2500000, fy28: 2500000 },
+                { id: 'B1', name: 'Annual Citywide Bridge Repairs Project', category: 'Bridges', fy25: 200000, fy26: 200000, fy27: 500000, fy28: 500000 },
+                { id: 'B2', name: 'Pico Rivera Regional Bikeway Project', category: 'Bridges', fy25: 30000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'B3', name: 'Rehabilitation Telegraph Rd Bridge Over San Gabriel River', category: 'Bridges', fy25: 1638248, fy26: 16694102, fy27: 0, fy28: 0 },
+                { id: 'B4', name: 'Rehabilitation Washington Blvd Bridge Over Rio Hondo River', category: 'Bridges', fy25: 3211500, fy26: 4072823, fy27: 24787072, fy28: 0 },
+                { id: 'W1', name: 'PFAS Treatment System Project - Phase II - Federalize', category: 'Water', fy25: 3350000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'W2', name: 'Storage Tanks', category: 'Water', fy25: 3490000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'W3', name: 'Water Facility Improvements', category: 'Water', fy25: 0, fy26: 0, fy27: 500000, fy28: 0 },
+                { id: 'W4', name: 'Water Main Replacement Project', category: 'Water', fy25: 858000, fy26: 3463000, fy27: 0, fy28: 0 },
+                { id: 'P1', name: 'Rio Hondo Park', category: 'Parks', fy25: 170000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'P2', name: 'Smith Park - Phase II', category: 'Parks', fy25: 0, fy26: 500000, fy27: 0, fy28: 0 },
+                { id: 'F1', name: 'ADA Improvements', category: 'Facilities', fy25: 1100000, fy26: 800000, fy27: 1100000, fy28: 800000 },
+                { id: 'F2', name: 'Bus Shelter Improvements Project', category: 'Facilities', fy25: 300000, fy26: 300000, fy27: 0, fy28: 0 },
+                { id: 'F3', name: 'Council Chambers A V B Upgrades', category: 'Facilities', fy25: 1200000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'F4', name: 'Security Camera System Project', category: 'Facilities', fy25: -180000, fy26: 350000, fy27: 0, fy28: 0 },
+                { id: 'T1', name: 'School Crossings Safety Enhancements Project', category: 'Traffic', fy25: 20000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'SD1', name: 'NPDES Infrastructure Projects', category: 'Storm Drains', fy25: 550000, fy26: 550000, fy27: 550000, fy28: 550000 },
+                { id: 'SD2', name: 'Sewer Main Improvements', category: 'Storm Drains', fy25: 552647, fy26: 447000, fy27: 0, fy28: 0 }
+            ]
+        };
+
+        const tableBody = document.getElementById('budget-table-body');
+        const formatCurrency = (num) => num ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(num) : '$0';
+
+        data.categories.forEach(category => {
+            const categoryRow = document.createElement('tr');
+            categoryRow.className = 'category-row';
+            categoryRow.innerHTML = `<td colspan="6" class="p-3 text-lg text-white">${category.name}</td>`;
+            tableBody.appendChild(categoryRow);
+
+            const projectsInCategory = data.allProjects.filter(p => p.category === category.name);
+            
+            if (projectsInCategory.length === 0) {
+                const noProjectRow = document.createElement('tr');
+                noProjectRow.className = 'border-b border-gray-700';
+                noProjectRow.innerHTML = `<td colspan="6" class="p-3 text-center text-gray-500">No projects listed for this category.</td>`;
+                tableBody.appendChild(noProjectRow);
+            } else {
+                projectsInCategory.forEach(p => {
+                    const total = (p.fy25 || 0) + (p.fy26 || 0) + (p.fy27 || 0) + (p.fy28 || 0);
+                    const projectRow = document.createElement('tr');
+                    projectRow.className = 'border-b border-gray-700 hover:bg-gray-800';
+                    projectRow.innerHTML = `
+                        <td class="p-3">${p.name}</td>
+                        <td class="p-3 text-right">${formatCurrency(p.fy25)}</td>
+                        <td class="p-3 text-right">${formatCurrency(p.fy26)}</td>
+                        <td class="p-3 text-right">${formatCurrency(p.fy27)}</td>
+                        <td class="p-3 text-right">${formatCurrency(p.fy28)}</td>
+                        <td class="p-3 text-right font-semibold text-white">${formatCurrency(total)}</td>
+                    `;
+                    tableBody.appendChild(projectRow);
+                });
+            }
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'category-row border-b-4 border-gray-900';
+            totalRow.innerHTML = `
+                <td colspan="5" class="p-3 text-right font-bold text-blue-400">Total for ${category.name}</td>
+                <td class="p-3 text-right font-bold text-blue-400">${formatCurrency(category.total)}</td>
+            `;
+            tableBody.appendChild(totalRow);
+        });
+        
+        // Add Grand Total row at the end
+        const grandTotalRow = document.createElement('tr');
+        grandTotalRow.className = 'grand-total-row text-lg';
+        grandTotalRow.innerHTML = `
+            <td class="p-4 font-bold text-white">Grand Total</td>
+            <td class="p-4 text-right font-bold text-white">${formatCurrency(data.grandTotal.fy25)}</td>
+            <td class="p-4 text-right font-bold text-white">${formatCurrency(data.grandTotal.fy26)}</td>
+            <td class="p-4 text-right font-bold text-white">${formatCurrency(data.grandTotal.fy27)}</td>
+            <td class="p-4 text-right font-bold text-white">${formatCurrency(data.grandTotal.fy28)}</td>
+            <td class="p-4 text-right font-bold text-blue-400">${formatCurrency(data.grandTotal.total)}</td>
+        `;
+        tableBody.appendChild(grandTotalRow);
+
+         document.getElementById('dashboard-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert("This would navigate back to the main CIP Dashboard.");
+        });
+    });
+    </script>
+</body>
+</html>

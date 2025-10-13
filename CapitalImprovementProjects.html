@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Improvement Project Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Leaflet.js for interactive maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles to complement Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark gray background */
+            color: #e5e7eb; /* Light gray text */
+        }
+        .dashboard-card {
+            background-color: #1f2937; /* Lighter dark gray for cards */
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            height: 400px; /* Taller chart for categories */
+            width: 100%;
+        }
+        #cipCategoryChart { cursor: pointer; }
+        .major-project-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .major-project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+        }
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background-color: #1f2937;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .timeline-bar-container {
+            background-color: #374151;
+        }
+        .timeline-bar {
+            background: linear-gradient(to right, #3b82f6, #60a5fa);
+        }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #1f2937;
+            color: #e5e7eb;
+            border-radius: 0.5rem;
+            border: 1px solid #4b5563;
+        }
+        .table-header {
+            background-color: #374151;
+        }
+        /* Project Phase Timeline Styles */
+        .phase-timeline { display: flex; width: 100%; border-radius: 0.5rem; overflow: hidden; }
+        .phase-segment { flex: 1; text-align: center; padding: 0.5rem 0.25rem; font-size: 0.75rem; font-weight: 600; border-right: 1px solid #1f2937; }
+        .phase-segment:last-child { border-right: none; }
+        .phase-complete { background-color: #2563eb; color: white; }
+        .phase-current { background-color: #60a5fa; color: #111827; }
+        .phase-future { background-color: #4b5563; color: #9ca3af; }
+    </style>
+</head>
+<body class="p-4 lg:p-6">
+
+    <main>
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Capital Improvement Project (CIP) Program</h1>
+                <p class="text-lg text-gray-400">Pico Rivera, CA | 5-Year Plan Overview</p>
+            </div>
+            <a href="#" id="full-budget-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                View Full Budget
+            </a>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column: CIP Categories Chart -->
+            <div class="dashboard-card lg:col-span-1">
+                <h2 class="text-xl font-semibold text-white mb-1">CIP 5-Year Budget by Category</h2>
+                <p class="text-sm text-gray-400 mb-4">Click a category to see detailed projects.</p>
+                <div class="chart-container">
+                    <canvas id="cipCategoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Column: Major Projects -->
+            <div class="lg:col-span-2">
+                <div class="dashboard-card h-full">
+                    <h2 class="text-xl font-semibold text-white mb-4">Highlighted Major Projects</h2>
+                    <div id="major-projects-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <!-- Major project cards will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Modals -->
+    <div id="project-modal" class="modal-backdrop hidden">
+        <div id="modal-content-project" class="dashboard-card modal-content relative"></div>
+    </div>
+    <div id="category-modal" class="modal-backdrop hidden">
+        <div id="modal-content-category" class="dashboard-card modal-content relative"></div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // --- DATA ---
+        // Data parsed and structured from the provided CSV files.
+        const cipData = {
+            categories: [
+                { name: "Streets", total: 67948605 },
+                { name: "Bridges", total: 66619495 },
+                { name: "Water", total: 31433683 },
+                { name: "Parks", total: 45960866 },
+                { name: "Facilities", total: 18739048 },
+                { name: "Traffic", total: 5978497 },
+                { name: "Storm Drains", total: 6274873 }
+            ],
+            majorProjects: [
+                { id: 'B4', name: "Rehab Washington Blvd Bridge Over Rio Hondo", category: "Bridges", cost: 37200412, timeline_start: "2024-07-01", timeline_end: "2027-12-31", funding: ["Federal Grant", "Local Match"], description: "Comprehensive structural rehabilitation of the Washington Blvd bridge over the Rio Hondo River to ensure seismic safety and extend its service life.", lat: 33.9935, lng: -118.1095, image: "https://placehold.co/600x400/1f2937/e5e7eb?text=Washington+Blvd+Bridge", phase_planning_end: "2024-12-31", phase_design_end: "2025-06-30", phase_bid_end: "2025-09-30", phase_construction_end: "2027-12-31" },
+                { id: 'B3', name: "Rehab Telegraph Rd Bridge Over San Gabriel River", category: "Bridges", cost: 23729867, timeline_start: "2024-07-01", timeline_end: "2026-12-31", funding: ["Federal Grant", "Local Match"], description: "Major rehabilitation of the Telegraph Road bridge crossing the San Gabriel River, including seismic retrofitting and deck replacement.", lat: 33.9772, lng: -118.0751, image: "https://placehold.co/600x400/1f2937/e5e7eb?text=Telegraph+Rd+Bridge", phase_planning_end: "2024-09-30", phase_design_end: "2025-03-31", phase_bid_end: "2025-06-30", phase_construction_end: "2026-12-31" },
+                { id: 'P2', name: "Smith Park - Phase II", category: "Parks", cost: 21500000, timeline_start: "2025-01-01", timeline_end: "2026-12-31", funding: ["Prop 68 Grant", "City Bonds"], description: "Phase II of the Smith Park master plan, including a new community building, expanded sports fields, and enhanced landscaping.", lat: 33.9805, lng: -118.0822, image: "https://www.pico-rivera.org/wp-content/uploads/2023/05/SP-POOL-CONCEPT-3.jpg", phase_planning_end: "2024-06-30", phase_design_end: "2024-12-31", phase_bid_end: "2025-03-31", phase_construction_end: "2026-12-31" },
+                { id: 'W10', name: "Water System Master Plan", category: "Water", cost: 10000000, timeline_start: "2024-07-01", timeline_end: "2028-06-30", funding: ["Water Enterprise Fund"], description: "A multi-year program to upgrade and replace aging water mains and infrastructure throughout the city to improve reliability and water quality.", lat: 33.9836, lng: -118.0967, image: "https://placehold.co/600x400/1f2937/e5e7eb?text=Water+System+Plan", phase_planning_end: "2025-06-30", phase_design_end: "2026-06-30", phase_bid_end: "2027-06-30", phase_construction_end: "2028-06-30" },
+                { id: 'S7', name: "Whittier Boulevard Street Improvements", category: "Streets", cost: 20000000, timeline_start: "2024-07-01", timeline_end: "2026-06-30", funding: ["Gas Tax", "Measure M"], description: "Major streetscape and pavement improvements along the city's primary commercial corridor.", lat: 33.9845, lng: -118.0850, image: "https://placehold.co/600x400/1f2937/e5e7eb?text=Whittier+Blvd", phase_planning_end: "2023-12-31", phase_design_end: "2024-06-30", phase_bid_end: "2024-09-30", phase_construction_end: "2026-06-30" }
+            ],
+            allProjects: [
+                { id: 'S1', name: 'Annual Sidewalk Improvements Project', category: 'Streets', fy25: 270000, fy26: 270000, fy27: 270000, fy28: 270000 },
+                { id: 'S2', name: 'Annual Signing and Striping Project', category: 'Streets', fy25: 120000, fy26: 120000, fy27: 120000, fy28: 0 },
+                { id: 'S3', name: 'Major Corridors Median Beautification Project', category: 'Streets', fy25: 400000, fy26: 400000, fy27: 0, fy28: 0 },
+                { id: 'S4', name: 'Safe Routes to School', category: 'Streets', fy25: 400000, fy26: 400000, fy27: 400000, fy28: 400000 },
+                { id: 'S5', name: 'Street Light Pole Replacement Project', category: 'Streets', fy25: 200000, fy26: 200000, fy27: 200000, fy28: 200000 },
+                { id: 'S6', name: 'Traffic Calming Project', category: 'Streets', fy25: 300000, fy26: 300000, fy27: 300000, fy28: 300000 },
+                { id: 'S7', name: 'Whittier Boulevard Street Improvements', category: 'Streets', fy25: 10000000, fy26: 10000000, fy27: 0, fy28: 0 },
+                { id: 'S8', name: 'Residential Street Improvements Project', category: 'Streets', fy25: 2500000, fy26: 2500000, fy27: 2500000, fy28: 2500000 },
+                { id: 'B1', name: 'Annual Citywide Bridge Repairs Project', category: 'Bridges', fy25: 200000, fy26: 200000, fy27: 500000, fy28: 500000 },
+                { id: 'B2', name: 'Pico Rivera Regional Bikeway Project', category: 'Bridges', fy25: 30000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'B3', name: 'Rehabilitation Telegraph Rd Bridge Over San Gabriel River', category: 'Bridges', fy25: 1638248, fy26: 16694102, fy27: 0, fy28: 0 },
+                { id: 'B4', name: 'Rehabilitation Washington Blvd Bridge Over Rio Hondo River', category: 'Bridges', fy25: 3211500, fy26: 4072823, fy27: 24787072, fy28: 0 },
+                { id: 'W1', name: 'PFAS Treatment System Project - Phase II - Federalize', category: 'Water', fy25: 3350000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'W2', name: 'Storage Tanks', category: 'Water', fy25: 3490000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'W3', name: 'Water Facility Improvements', category: 'Water', fy25: 0, fy26: 0, fy27: 500000, fy28: 0 },
+                { id: 'W4', name: 'Water Main Replacement Project', category: 'Water', fy25: 858000, fy26: 3463000, fy27: 0, fy28: 0 },
+                { id: 'P1', name: 'Rio Hondo Park', category: 'Parks', fy25: 170000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'P2', name: 'Smith Park - Phase II', category: 'Parks', fy25: 0, fy26: 500000, fy27: 0, fy28: 0 },
+                { id: 'F1', name: 'ADA Improvements', category: 'Facilities', fy25: 1100000, fy26: 800000, fy27: 1100000, fy28: 800000 },
+                { id: 'F2', name: 'Bus Shelter Improvements Project', category: 'Facilities', fy25: 300000, fy26: 300000, fy27: 0, fy28: 0 },
+                { id: 'F3', name: 'Council Chambers A V B Upgrades', category: 'Facilities', fy25: 1200000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'F4', name: 'Security Camera System Project', category: 'Facilities', fy25: -180000, fy26: 350000, fy27: 0, fy28: 0 },
+                { id: 'T1', name: 'School Crossings Safety Enhancements Project', category: 'Traffic', fy25: 20000, fy26: 0, fy27: 0, fy28: 0 },
+                { id: 'SD1', name: 'NPDES Infrastructure Projects', category: 'Storm Drains', fy25: 550000, fy26: 550000, fy27: 550000, fy28: 550000 },
+                { id: 'SD2', name: 'Sewer Main Improvements', category: 'Storm Drains', fy25: 552647, fy26: 447000, fy27: 0, fy28: 0 }
+            ]
+        };
+
+        // --- CHART CREATION ---
+        function createCIPCategoryChart() {
+            const ctx = document.getElementById('cipCategoryChart').getContext('2d');
+            const sortedCategories = [...cipData.categories].sort((a, b) => a.total - b.total);
+            
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCategories.map(c => c.name),
+                    datasets: [{
+                        label: '5-Year Budget',
+                        data: sortedCategories.map(c => c.total),
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#9ca3af', callback: value => '$' + (value / 1000000).toFixed(1) + 'M' }, grid: { color: '#374151' } },
+                        y: { ticks: { color: '#d1d5db' }, grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: context => ' ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(context.raw) } }
+                    }
+                }
+            });
+
+            ctx.onclick = (evt) => {
+                const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+                if (points.length) {
+                    const firstPoint = points[0];
+                    const label = chart.data.labels[firstPoint.index];
+                    openCategoryModal(label);
+                }
+            };
+        }
+
+        // --- MODAL LOGIC ---
+        const projectModal = document.getElementById('project-modal');
+        const projectModalContent = document.getElementById('modal-content-project');
+        const categoryModal = document.getElementById('category-modal');
+        const categoryModalContent = document.getElementById('modal-content-category');
+        let modalMap = null;
+
+        function populateMajorProjects() {
+            const majorProjectsList = document.getElementById('major-projects-list');
+            majorProjectsList.innerHTML = '';
+            cipData.majorProjects.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'dashboard-card major-project-card cursor-pointer';
+                card.innerHTML = `
+                    <h3 class="text-lg font-bold text-blue-400">${project.name}</h3>
+                    <p class="text-sm text-gray-400 mb-2">${project.category}</p>
+                    <p class="text-2xl font-bold text-white mb-2">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(project.cost)}</p>
+                    <p class="text-xs text-gray-500">Click to see details</p>
+                `;
+                card.addEventListener('click', () => openProjectModal(project.id));
+                majorProjectsList.appendChild(card);
+            });
+        }
+
+        function openProjectModal(projectId) {
+            const project = cipData.majorProjects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            const start = new Date(project.timeline_start);
+            const end = new Date(project.timeline_end);
+            const today = new Date();
+            const totalDuration = end - start;
+            const elapsedDuration = today - start;
+            let progress = Math.max(0, Math.min(100, (elapsedDuration / totalDuration) * 100));
+
+            // Phase Calculation Logic
+            const phases = [
+                { name: 'Planning', endDate: new Date(project.phase_planning_end) },
+                { name: 'Design', endDate: new Date(project.phase_design_end) },
+                { name: 'Bid', endDate: new Date(project.phase_bid_end) },
+                { name: 'Construction', endDate: new Date(project.phase_construction_end) },
+                { name: 'Complete', endDate: null }
+            ];
+
+            let currentPhaseIndex = phases.findIndex(phase => today <= phase.endDate);
+            if (currentPhaseIndex === -1 && today > phases[3].endDate) {
+                currentPhaseIndex = 4; // Complete
+            } else if (currentPhaseIndex === -1) {
+                currentPhaseIndex = 0; // Default to planning if dates are weird
+            }
+
+            const phaseTimelineHTML = phases.map((phase, index) => {
+                let phaseClass = 'phase-future';
+                if (index < currentPhaseIndex) {
+                    phaseClass = 'phase-complete';
+                } else if (index === currentPhaseIndex) {
+                    phaseClass = 'phase-current';
+                }
+                if (phase.name === 'Complete' && currentPhaseIndex === 4) {
+                    phaseClass = 'phase-current';
+                }
+                 if (phase.name === 'Complete' && currentPhaseIndex < 4) {
+                    phaseClass = 'phase-future';
+                }
+                return `<div class="phase-segment ${phaseClass}">${phase.name}</div>`;
+            }).join('');
+
+
+            projectModalContent.innerHTML = `
+                <button id="close-project-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-3xl z-50">&times;</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-4">
+                        <img src="${project.image}" alt="Project Image" class="rounded-lg object-cover w-full h-64">
+                        <div id="modal-map" class="w-full h-64 rounded-lg z-0"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">${project.name}</h2>
+                        <p class="text-md text-gray-400 mb-4">${project.category}</p>
+                        <p class="text-base text-gray-300 mb-6">${project.description}</p>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-white mb-2">Total Budget</h3>
+                            <p class="text-4xl font-bold text-blue-400">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(project.cost)}</p>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-white mb-2">Project Timeline</h3>
+                            <div class="flex justify-between text-sm text-gray-400 mb-1">
+                                <span>${start.toLocaleDateString()}</span>
+                                <span>${end.toLocaleDateString()}</span>
+                            </div>
+                            <div class="w-full timeline-bar-container rounded-full h-2.5"><div class="timeline-bar h-2.5 rounded-full" style="width: ${progress}%"></div></div>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-white mb-2">Project Phase</h3>
+                            <div class="phase-timeline">${phaseTimelineHTML}</div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Funding Sources</h3>
+                            <div class="flex flex-wrap gap-2">${project.funding.map(s => `<span class="bg-gray-700 text-gray-300 text-sm font-medium px-2.5 py-0.5 rounded-full">${s}</span>`).join('')}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            projectModal.classList.remove('hidden');
+            
+            if (modalMap) modalMap.remove();
+            modalMap = L.map('modal-map').setView([project.lat, project.lng], 15);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(modalMap);
+            L.marker([project.lat, project.lng]).addTo(modalMap).bindPopup(project.name).openPopup();
+            setTimeout(() => modalMap.invalidateSize(), 10);
+
+            document.getElementById('close-project-modal').addEventListener('click', () => closeModal(projectModal));
+        }
+
+        function openCategoryModal(categoryName) {
+            const projectsInCategory = cipData.allProjects.filter(p => p.category === categoryName);
+            const formatCurrency = (num) => num ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(num) : '$0';
+
+            let tableRows = projectsInCategory.map(p => {
+                const total = (p.fy25 || 0) + (p.fy26 || 0) + (p.fy27 || 0) + (p.fy28 || 0);
+                return `<tr class="border-b border-gray-700 hover:bg-gray-800">
+                    <td class="p-3">${p.id}</td>
+                    <td class="p-3 font-semibold text-white">${p.name}</td>
+                    <td class="p-3 text-right">${formatCurrency(p.fy25)}</td>
+                    <td class="p-3 text-right">${formatCurrency(p.fy26)}</td>
+                    <td class="p-3 text-right">${formatCurrency(p.fy27)}</td>
+                    <td class="p-3 text-right">${formatCurrency(p.fy28)}</td>
+                    <td class="p-3 text-right font-bold text-blue-400">${formatCurrency(total)}</td>
+                </tr>`;
+            }).join('');
+
+            categoryModalContent.innerHTML = `
+                <button id="close-category-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-3xl">&times;</button>
+                <h2 class="text-3xl font-bold text-white mb-4">Projects: ${categoryName}</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-300 uppercase table-header">
+                            <tr>
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Project Name</th>
+                                <th class="p-3 text-right">FY 24-25</th>
+                                <th class="p-3 text-right">FY 25-26</th>
+                                <th class="p-3 text-right">FY 26-27</th>
+                                <th class="p-3 text-right">FY 27-28</th>
+                                <th class="p-3 text-right">Total Budget</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+            `;
+            categoryModal.classList.remove('hidden');
+            document.getElementById('close-category-modal').addEventListener('click', () => closeModal(categoryModal));
+        }
+
+        function closeModal(modalElement) {
+            modalElement.classList.add('hidden');
+        }
+        
+        projectModal.addEventListener('click', (e) => { if (e.target === projectModal) closeModal(projectModal); });
+        categoryModal.addEventListener('click', (e) => { if (e.target === categoryModal) closeModal(categoryModal); });
+        
+        // --- INITIALIZE DASHBOARD ---
+        createCIPCategoryChart();
+        populateMajorProjects();
+        
+        document.getElementById('full-budget-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert("This would navigate to the Full Budget Detail page.");
+        });
+    });
+    </script>
+</body>
+</html>
