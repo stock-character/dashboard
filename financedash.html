@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City of Pico Rivera - Financial Dashboard</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- D3.js for data manipulation -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Chart.js for creating charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2f9; /* Lighter, cooler gray background */
+        }
+        .drilldown-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .drilldown-row:hover {
+            background-color: #f8fafc;
+        }
+        .drilldown-content {
+            display: none; /* Hidden by default */
+        }
+        .icon-arrow {
+            transition: transform 0.2s ease-in-out;
+        }
+        .expanded .icon-arrow {
+            transform: rotate(90deg);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+        }
+        .wide-chart-container {
+             position: relative;
+            width: 100%;
+            height: 500px;
+        }
+        #budgetVsActualChart:hover {
+            cursor: pointer;
+        }
+        .modal-table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .modal-table-container::-webkit-scrollbar-thumb {
+            background: #a8a8a8;
+            border-radius: 4px;
+        }
+        .modal-table-container::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <!-- File Upload Section -->
+    <div id="upload-section" class="container mx-auto p-8 flex items-center justify-center min-h-screen">
+        <div class="max-w-xl w-full mx-auto bg-white p-8 rounded-xl shadow-soft text-center">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Financial Dashboard</h1>
+            <p class="text-gray-600 mb-6">Please select the financial data CSV file to generate the dashboard.</p>
+            <label for="csvFileInput" class="cursor-pointer bg-blue-800 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-900 transition-colors inline-block">
+                Select CSV File
+            </label>
+            <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+            <p id="upload-error" class="text-red-500 mt-4"></p>
+        </div>
+    </div>
+
+    <!-- Dashboard Container (initially hidden) -->
+    <div id="dashboard-container" class="container mx-auto p-4 md:p-8 hidden">
+        <!-- Header -->
+        <header class="mb-8 text-left border-b pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Financial Dashboard</h1>
+            <p class="text-lg text-gray-600">City of Pico Rivera - General Fund Performance</p>
+            <p id="last-updated-date" class="text-sm text-gray-500 mt-1"></p>
+        </header>
+
+        <!-- Key Metrics Section -->
+        <div id="kpi-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Total Revenues -->
+            <div class="bg-white p-6 rounded-xl shadow-soft flex items-center">
+                 <div class="bg-blue-100 p-4 rounded-full mr-6">
+                    <svg class="w-8 h-8 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-sm font-medium text-gray-500">Total Revenues (2026)</h2>
+                    <p id="total-revenue-actual" class="text-3xl font-bold text-gray-900"></p>
+                    <p class="text-sm text-gray-500">Budget: <span id="total-revenue-budget"></span></p>
+                </div>
+            </div>
+            <!-- Total Expenses -->
+            <div class="bg-white p-6 rounded-xl shadow-soft flex items-center">
+                <div class="bg-red-100 p-4 rounded-full mr-6">
+                    <svg class="w-8 h-8 text-red-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5 6.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-sm font-medium text-gray-500">Total Expenses (2026)</h2>
+                    <p id="total-expenses-actual" class="text-3xl font-bold text-gray-900"></p>
+                    <p class="text-sm text-gray-500">Budget: <span id="total-expenses-budget"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="space-y-8">
+            <!-- Expanded Bar Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-soft">
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">Department Expenses: Budget vs. Actual (2026)</h3>
+                <div class="wide-chart-container">
+                    <canvas id="budgetVsActualChart"></canvas>
+                </div>
+            </div>
+            <!-- Pie Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-soft">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Revenue Overview (2026 Budget)</h3>
+                    <div class="chart-container">
+                        <canvas id="revenueOverviewChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-soft">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Approved Expenditure by Department (2026)</h3>
+                    <div class="chart-container">
+                        <canvas id="expenditureByDeptChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drill-down Data Section -->
+        <div class="mt-8">
+            <h3 class="text-xl font-semibold mb-4 text-center text-gray-800">Financial Summary (FY 2025-2026) General Fund</h3>
+            <!-- Revenues Table -->
+            <div class="bg-white p-6 rounded-xl shadow-soft mb-8">
+                <h4 class="text-lg font-semibold mb-4 text-blue-800">Revenues</h4>
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 p-4 grid grid-cols-12 font-bold text-gray-600 text-sm">
+                        <span class="col-span-5">Description</span>
+                        <span class="col-span-2 text-right">Amended Budget</span>
+                        <span class="col-span-2 text-right">Actual Amount</span>
+                        <span class="col-span-3 text-right">Variance</span>
+                    </div>
+                    <div id="revenue-drilldown-container"></div>
+                </div>
+            </div>
+            <!-- Expenses Table -->
+             <div class="bg-white p-6 rounded-xl shadow-soft">
+                <h4 class="text-lg font-semibold mb-4 text-red-800">Expenses</h4>
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 p-4 grid grid-cols-12 font-bold text-gray-600 text-sm">
+                        <span class="col-span-5">Description</span>
+                        <span class="col-span-2 text-right">Amended Budget</span>
+                        <span class="col-span-2 text-right">Actual Amount</span>
+                        <span class="col-span-3 text-right">Variance</span>
+                    </div>
+                    <div id="expenses-drilldown-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-semibold text-gray-800">Details</h3>
+                <button id="modal-close-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto modal-table-container">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Division</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actual</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Variance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Content will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('csvFileInput');
+            const uploadSection = document.getElementById('upload-section');
+            const dashboardContainer = document.getElementById('dashboard-container');
+            const errorP = document.getElementById('upload-error');
+            let budgetChart, revenuePieChart, expenditurePieChart;
+
+            fileInput.addEventListener('change', handleFileSelect, false);
+
+            function handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (!file) { return; }
+                uploadSection.querySelector('h1').textContent = 'Processing...';
+                uploadSection.querySelector('p').textContent = 'Your dashboard is being generated.';
+                uploadSection.querySelector('label').style.display = 'none';
+                errorP.textContent = '';
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const csvText = e.target.result;
+                        const data = d3.csvParse(csvText);
+                        if (data.length === 0) throw new Error("CSV file is empty or invalid.");
+                        renderDashboard(data);
+                        uploadSection.style.display = 'none';
+                        dashboardContainer.classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Error parsing CSV file:', error);
+                        errorP.textContent = `Error: Could not parse the file. Please ensure it's a valid, non-empty CSV.`;
+                        uploadSection.querySelector('h1').textContent = 'Financial Dashboard';
+                        uploadSection.querySelector('p').textContent = 'Please select a CSV file to visualize the financial data for the City of Pico Rivera.';
+                        uploadSection.querySelector('label').style.display = 'inline-block';
+                    }
+                };
+                reader.onerror = () => {
+                    console.error('Error reading file.');
+                    errorP.textContent = 'Error: Could not read the selected file.';
+                };
+                reader.readAsText(file);
+            }
+            
+            function renderDashboard(data) {
+                const today = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                document.getElementById('last-updated-date').textContent = `Data updated as of ${today.toLocaleDateString('en-US', options)}`;
+
+                const formatUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+                const parseCurrency = (s) => parseFloat(String(s).replace(/[$,]/g, '')) || 0;
+
+                const revenues = data.filter(d => d.AccountType === 'Revenues');
+                const expenses = data.filter(d => d.AccountType === 'Expenses');
+                
+                // --- KPI Cards Processing ---
+                const totalRevenueActual = d3.sum(revenues, d => parseCurrency(d['2026 Actual Amount']));
+                const totalRevenueBudget = d3.sum(revenues, d => parseCurrency(d['2026 Amended Budget']));
+                const totalExpensesActual = d3.sum(expenses, d => parseCurrency(d['2026 Actual Amount']));
+                const totalExpensesBudget = d3.sum(expenses, d => parseCurrency(d['2026 Amended Budget']));
+
+                document.getElementById('total-revenue-actual').textContent = formatUSD.format(totalRevenueActual);
+                document.getElementById('total-revenue-budget').textContent = formatUSD.format(totalRevenueBudget);
+                document.getElementById('total-expenses-actual').textContent = formatUSD.format(totalExpensesActual);
+                document.getElementById('total-expenses-budget').textContent = formatUSD.format(totalExpensesBudget);
+
+                // --- Chart Data Processing ---
+                const expensesByDept = d3.rollup(expenses, v => ({ budget: d3.sum(v, d => parseCurrency(d['2026 Amended Budget'])), actual: d3.sum(v, d => parseCurrency(d['2026 Actual Amount'])) }), d => d['Department Description']);
+                const sortedDepts = Array.from(expensesByDept, ([key, value]) => ({ key, ...value })).sort((a, b) => b.budget - a.budget).slice(0, 15);
+                
+                const revenueByClass1 = d3.rollup(revenues, v => d3.sum(v, d => parseCurrency(d['2026 Amended Budget'])), d => d['Class 1 Description']);
+                const sortedRevenueClasses = Array.from(revenueByClass1, ([key, value]) => ({ key, value })).sort((a,b) => b.value - a.value);
+
+                const expenditureByDept = d3.rollup(expenses, v => d3.sum(v, d => parseCurrency(d['2026 Amended Budget'])), d => d['Department Description']);
+                const sortedExpenditureDepts = Array.from(expenditureByDept, ([key, value]) => ({ key, value })).sort((a,b) => b.value - a.value);
+
+                // --- Chart Rendering ---
+                const executiveChartColors = ['#2563eb', '#5eead4', '#f59e0b', '#d946ef', '#10b981', '#f43f5e', '#6366f1', '#8b5cf6', '#06b6d4', '#ef4444'];
+
+
+                if (budgetChart) budgetChart.destroy();
+                const budgetCtx = document.getElementById('budgetVsActualChart').getContext('2d');
+                budgetChart = new Chart(budgetCtx, {
+                    type: 'bar',
+                    data: { labels: sortedDepts.map(d => d.key), datasets: [{ label: 'Budget', data: sortedDepts.map(d => d.budget), backgroundColor: '#93c5fd', borderWidth: 1 }, { label: 'Actual', data: sortedDepts.map(d => d.actual), backgroundColor: '#1d4ed8', borderWidth: 1 }] },
+                    options: { 
+                        indexAxis: 'y', 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        scales: { x: { beginAtZero: true, ticks: { callback: (v) => formatUSD.format(v/1000) + 'K' } } },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const departmentName = budgetChart.data.labels[index];
+                                const departmentData = expenses.filter(d => d['Department Description'] === departmentName);
+                                showDetailsModal(departmentName, departmentData);
+                            }
+                        }
+                    }
+                });
+
+                if (revenuePieChart) revenuePieChart.destroy();
+                const revenuePieCtx = document.getElementById('revenueOverviewChart').getContext('2d');
+                revenuePieChart = new Chart(revenuePieCtx, {
+                    type: 'pie',
+                    data: { labels: sortedRevenueClasses.map(d => d.key), datasets: [{ data: sortedRevenueClasses.map(d => d.value), backgroundColor: executiveChartColors }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+
+                if (expenditurePieChart) expenditurePieChart.destroy();
+                const expenditurePieCtx = document.getElementById('expenditureByDeptChart').getContext('2d');
+                expenditurePieChart = new Chart(expenditurePieCtx, {
+                    type: 'pie',
+                    data: { labels: sortedExpenditureDepts.map(d => d.key), datasets: [{ data: sortedExpenditureDepts.map(d => d.value), backgroundColor: executiveChartColors }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+                
+                // --- Helper Functions ---
+                const sumTotals = (items) => ({ budget: d3.sum(items, d => parseCurrency(d['2026 Amended Budget'])), actual: d3.sum(items, d => parseCurrency(d['2026 Actual Amount'])) });
+
+                function buildDrilldown(container, dataToProcess) {
+                    container.innerHTML = '';
+                    const groupedData = d3.group(dataToProcess, d => d['Department Description'] || 'N/A', d => d['Division Description'] || 'N/A', d => d['Class 1 Description'] || 'N/A');
+                    
+                    groupedData.forEach((divMap, deptDesc) => {
+                        const deptTotals = sumTotals(Array.from(divMap.values()).flatMap(class1Map => Array.from(class1Map.values()).flat()));
+                        const level1Row = createRow(deptDesc, deptTotals.budget, deptTotals.actual, 0, true);
+                        const level1Content = document.createElement('div');
+                        level1Content.className = 'drilldown-content';
+                        container.appendChild(level1Row);
+                        container.appendChild(level1Content);
+                        level1Row.addEventListener('click', (e) => { e.stopPropagation(); toggleExpand(level1Row, level1Content); });
+
+                        divMap.forEach((class1Map, divDesc) => {
+                            const divTotals = sumTotals(Array.from(class1Map.values()).flat());
+                            const level2Row = createRow(divDesc, divTotals.budget, divTotals.actual, 1, true);
+                            const level2Content = document.createElement('div');
+                            level2Content.className = 'drilldown-content';
+                            level1Content.appendChild(level2Row);
+                            level1Content.appendChild(level2Content);
+                            level2Row.addEventListener('click', (e) => { e.stopPropagation(); toggleExpand(level2Row, level2Content); });
+
+                            class1Map.forEach((accounts, class1Desc) => {
+                                const class1Totals = sumTotals(accounts);
+                                const level3Row = createRow(class1Desc, class1Totals.budget, class1Totals.actual, 2, true);
+                                const level3Content = document.createElement('div');
+                                level3Content.className = 'drilldown-content';
+                                level2Content.appendChild(level3Row);
+                                level2Content.appendChild(level3Content);
+                                level3Row.addEventListener('click', (e) => { e.stopPropagation(); toggleExpand(level3Row, level3Content); });
+                                
+                                accounts.forEach(account => {
+                                    const accountBudget = parseCurrency(account['2026 Amended Budget']);
+                                    const accountActual = parseCurrency(account['2026 Actual Amount']);
+                                    const level4Row = createRow(account['Account Description'], accountBudget, accountActual, 3, false);
+                                    level3Content.appendChild(level4Row);
+                                });
+                            });
+                        });
+                    });
+                }
+
+                function createRow(name, budget, actual, level, expandable) {
+                    const row = document.createElement('div');
+                    row.className = 'drilldown-row grid grid-cols-12 items-center p-4 border-t border-gray-200';
+                    const variance = budget - actual;
+                    const varianceColor = variance >= 0 ? 'text-green-700' : 'text-red-700';
+                    let variancePercentageText = '';
+                    if (budget !== 0) {
+                        const percentage = (variance / budget) * 100;
+                        variancePercentageText = `(${percentage.toFixed(1)}%)`;
+                    }
+                    let icon = expandable ? `<svg class="icon-arrow h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0-0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>` : `<span class="w-7 mr-2"></span>`;
+                    const paddingLeft = `${level * 1.5}rem`;
+                    row.innerHTML = `
+                        <div class="col-span-5 flex items-center" style="padding-left: ${paddingLeft};">
+                            ${icon}
+                            <span class="${level === 0 ? 'font-bold' : 'font-normal'} text-gray-800">${name}</span>
+                        </div>
+                        <span class="col-span-2 text-right font-mono text-gray-700 pr-4">${formatUSD.format(budget)}</span>
+                        <span class="col-span-2 text-right font-mono text-gray-700 pr-4">${formatUSD.format(actual)}</span>
+                        <span class="col-span-3 text-right font-mono ${varianceColor} pr-4">
+                            ${formatUSD.format(variance)}
+                            <span class="text-xs ml-1">${variancePercentageText}</span>
+                        </span>
+                    `;
+                    return row;
+                }
+                
+                function toggleExpand(row, content) {
+                    row.classList.toggle('expanded');
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                }
+
+                function showDetailsModal(departmentName, departmentData) {
+                    const modal = document.getElementById('details-modal');
+                    const modalTitle = document.getElementById('modal-title');
+                    const modalBody = document.getElementById('modal-table-body');
+                    
+                    modalTitle.textContent = `Line Item Details for ${departmentName}`;
+                    modalBody.innerHTML = ''; // Clear previous data
+
+                    departmentData.forEach(d => {
+                        const budget = parseCurrency(d['2026 Amended Budget']);
+                        const actual = parseCurrency(d['2026 Actual Amount']);
+                        const variance = budget - actual;
+                        const varianceColor = variance >= 0 ? 'text-green-700' : 'text-red-700';
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${d['Account Description']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${d['Division Description']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">${formatUSD.format(budget)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">${formatUSD.format(actual)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm ${varianceColor} text-right">${formatUSD.format(variance)}</td>
+                        `;
+                        modalBody.appendChild(row);
+                    });
+
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+
+                // --- Main execution ---
+                buildDrilldown(document.getElementById('revenue-drilldown-container'), revenues);
+                buildDrilldown(document.getElementById('expenses-drilldown-container'), expenses);
+
+                const modal = document.getElementById('details-modal');
+                document.getElementById('modal-close-btn').addEventListener('click', () => modal.classList.add('hidden'));
+                modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
+            }
+        });
+    </script>
+
+</body>
+</html>
+

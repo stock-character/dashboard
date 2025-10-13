@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pico Rivera - City Data Initiative</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #e5e7eb; }
+        .tool-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+        }
+        .tool-card h3 {
+            color: #60a5fa; /* Light blue for titles */
+        }
+        .tool-card p {
+            flex-grow: 1;
+        }
+        .tool-card a {
+            background-color: #3b82f6;
+            color: white;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            margin-top: 1rem;
+            display: block;
+        }
+        .tool-card a:hover {
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <main class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-white">The PR-Stat Initiative</h1>
+            <p class="text-xl text-gray-400 mt-2">A Data-Driven Approach to a More Efficient & Resilient Pico Rivera</p>
+        </div>
+
+        <!-- Introduction -->
+        <div class="bg-gray-800/50 p-6 rounded-lg mb-12">
+            <h2 class="text-2xl font-semibold text-white mb-3">Vision Statement</h2>
+            <p class="text-gray-300">
+                The PR-Stat Initiative is a proposed city-wide program designed to leverage the data we already collect to enhance decision-making, improve operational efficiency, and increase public trust through transparency. By centralizing our key metrics into a series of interactive dashboards and analytical tools, we can move from a reactive to a proactive model of governance. This portal serves as the central hub for these new tools, providing management with at-a-glance insights into the fiscal health, performance, and long-term trajectory of our city.
+            </p>
+        </div>
+
+        <!-- Tool Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- City Manager Dashboard -->
+            <div class="tool-card">
+                <h3 class="text-xl font-bold mb-2">City Manager Dashboard</h3>
+                <p class="text-gray-400 mb-4">A high-level, multi-departmental overview of the city's operational health, tracking key performance indicators across Finance, Public Works, HR, and more.</p>
+                <a href="#" onclick="alert('This would open the City Manager Dashboard.')">View Dashboard</a>
+            </div>
+
+            <!-- Financial Health Dashboard -->
+            <div class="tool-card">
+                <h3 class="text-xl font-bold mb-2">Financial Health & Resiliency</h3>
+                <p class="text-gray-400 mb-4">An in-depth analysis of the city's 10-year financial trends based on the GFOA-aligned Strong Towns Finance Decoder methodology.</p>
+                <a href="#" onclick="alert('This would open the Financial Health Dashboard.')">View Dashboard</a>
+            </div>
+
+            <!-- Financial Forecasting Tool -->
+            <div class="tool-card">
+                <h3 class="text-xl font-bold mb-2">Financial Forecasting Tool</h3>
+                <p class="text-gray-400 mb-4">An interactive tool to model the long-term fiscal impact of new projects, economic changes, and policy decisions on the General Fund.</p>
+                <a href="#" onclick="alert('This would open the Forecasting Tool.')">View Tool</a>
+            </div>
+
+            <!-- CIP Dashboard -->
+            <div class="tool-card">
+                <h3 class="text-xl font-bold mb-2">Capital Projects (CIP) Dashboard</h3>
+                <p class="text-gray-400 mb-4">A visual overview of the 5-Year Capital Improvement Program, including budget breakdowns by category and details on major projects.</p>
+                <a href="#" onclick="alert('This would open the CIP Dashboard.')">View Dashboard</a>
+            </div>
+
+            <!-- Parks & Rec Fee Tool -->
+            <div class="tool-card">
+                <h3 class="text-xl font-bold mb-2">Parks & Rec Fee Calculator</h3>
+                <p class="text-gray-400 mb-4">An analytical tool to assess cost recovery for recreation programs and benchmark fees against regional competitors.</p>
+                <a href="#" onclick="alert('This would open the Fee Calculator.')">View Tool</a>
+            </div>
+
+            <!-- Proactive Code Enforcement -->
+            <div class="tool-card">
+                <h3 class="text-xl font-bold mb-2">Proactive Code Enforcement</h3>
+                <p class="text-gray-400 mb-4">A predictive tool that identifies properties at high risk of blight, enabling preventative outreach and preserving neighborhood quality.</p>
+                <a href="#" onclick="alert('This would open the Code Enforcement Tool.')">View Tool</a>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

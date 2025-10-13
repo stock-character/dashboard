@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Dashboard - Pico Rivera, CA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-light: #f7fafc;
+            --background-dark: #1a202c;
+            --card-bg-light: #ffffff;
+            --card-bg-dark: #2d3748;
+            --text-light-primary: #1a202c;
+            --text-dark-primary: #e2e8f0;
+            --text-light-secondary: #4a5568;
+            --text-dark-secondary: #a0aec0;
+            --border-light: #e2e8f0;
+            --border-dark: #4a5568;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        html.dark body {
+            background-color: var(--background-dark);
+        }
+        html.light body {
+            background-color: var(--background-light);
+        }
+        .card {
+            background-color: var(--card-bg-light);
+            border: 1px solid var(--border-light);
+        }
+        html.dark .card {
+            background-color: var(--card-bg-dark);
+            border-color: var(--border-dark);
+        }
+        .text-primary { color: var(--text-light-primary); }
+        html.dark .text-primary { color: var(--text-dark-primary); }
+        .text-secondary { color: var(--text-light-secondary); }
+        html.dark .text-secondary { color: var(--text-dark-secondary); }
+
+        .sidebar-icon {
+            stroke-width: 1.5;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 flex flex-col p-4 shadow-lg transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="flex items-center justify-start w-full h-16 border-b border-gray-700">
+            <!-- City of Pico Rivera Logo -->
+            <img src="https://www.pico-rivera.org/images/cityhall/logo.png" alt="Pico Rivera Logo" class="h-10 w-10" onerror="this.style.display='none'">
+            <span class="ml-3 text-lg font-bold text-primary">Pico Rivera</span>
+        </div>
+        <nav id="sidebar-nav" class="mt-8 flex-1 w-full">
+            <ul class="space-y-2">
+                <li>
+                    <a href="#" data-department="dashboard" class="nav-link flex items-center p-3 rounded-lg">
+                        <svg class="h-6 w-6 sidebar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        <span class="ml-4 font-semibold">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-department="public_works" class="nav-link flex items-center p-3 rounded-lg">
+                        <svg class="h-6 w-6 sidebar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547a2 2 0 00-.547 1.806l.477 2.387a6 6 0 00.517 3.86l.158.318a6 6 0 00.517 3.86l2.387.477a2 2 0 001.806-.547a2 2 0 00.547-1.806l-.477-2.387a6 6 0 00-.517-3.86l-.158-.318a6 6 0 00-.517-3.86l-2.387-.477a2 2 0 00-.547-1.022m13.444-1.022a2 2 0 001.022.547l2.387.477a6 6 0 003.86-.517l.318-.158a6 6 0 013.86-.517l.477-2.387a2 2 0 00-.547-1.806a2 2 0 00-1.806-.547l-2.387.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517l-2.387-.477a2 2 0 00-1.806.547a2 2 0 00-.547 1.806l.477 2.387a6 6 0 00.517 3.86l.158.318a6 6 0 003.86.517l2.387-.477a2 2 0 001.022-.547m-13.444 0a2 2 0 01-1.022-.547L3.05 4.79a2 2 0 01.547-1.806a2 2 0 011.806-.547l2.387.477a6 6 0 013.86.517l.318.158a6 6 0 003.86.517l2.387-.477a2 2 0 011.806.547a2 2 0 01.547 1.806l-.477 2.387a6 6 0 01-.517 3.86l-.158.318a6 6 0 01-3.86.517l-2.387.477a2 2 0 01-1.022-.547z" /></svg>
+                        <span class="ml-4 font-semibold">Public Works</span>
+                    </a>
+                </li>
+                 <li>
+                    <a href="#" data-department="parks_rec" class="nav-link flex items-center p-3 rounded-lg">
+                        <svg class="h-6 w-6 sidebar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.5,3.5c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S15.9,3.5,14.5,3.5z M18.5,7.5c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S19.9,7.5,18.5,7.5z M10.5,7.5c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S11.9,7.5,10.5,7.5z M6.5,11.5c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S7.9,11.5,6.5,11.5z M14.5,11.5c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S15.9,11.5,14.5,11.5z M20,16.5c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S21.1,16.5,20,16.5z M4,16.5c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S5.1,16.5,4,16.5z M12,17.5c-1.9,0-3.5,1.6-3.5,3.5s1.6,3.5,3.5,3.5s3.5-1.6,3.5-3.5S13.9,17.5,12,17.5z"/></svg>
+                        <span class="ml-4 font-semibold">Parks & Recreation</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-department="finance" class="nav-link flex items-center p-3 rounded-lg">
+                        <svg class="h-6 w-6 sidebar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span class="ml-4 font-semibold">Finance</span>
+                    </a>
+                </li>
+                 <li>
+                    <a href="#" data-department="hr" class="nav-link flex items-center p-3 rounded-lg">
+                         <svg class="h-6 w-6 sidebar-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                         <span class="ml-4 font-semibold">Human Resources</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="mt-auto w-full">
+             <div class="card p-4 rounded-lg bg-gray-700">
+                <h4 class="font-semibold text-primary">Quick Links</h4>
+                <ul class="mt-2 space-y-1 text-sm text-indigo-400">
+                    <li><a href="#" class="hover:underline">City Website</a></li>
+                    <li><a href="#" class="hover:underline">Emergency Portal</a></li>
+                    <li><a href="#" class="hover:underline">Public Records</a></li>
+                </ul>
+             </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile menu -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
+
+    <!-- Main Content -->
+    <div class="lg:pl-64 transition-all duration-300 ease-in-out">
+        <main class="flex-1 flex flex-col min-h-screen">
+            <!-- Header -->
+            <header class="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800 sticky top-0 z-10">
+                <div class="flex items-center">
+                    <button id="menu-toggle" class="lg:hidden mr-2 p-2 rounded-full text-gray-400 hover:bg-gray-700 focus:outline-none">
+                       <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                    <div>
+                        <h1 id="dashboard-title" class="text-xl md:text-2xl font-bold text-primary">Executive Dashboard</h1>
+                        <p class="text-sm text-secondary" id="current-date"></p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                     <div id="status-indicator" class="flex items-center space-x-2 cursor-pointer" onclick="cycleStatus()">
+                        <span class="h-3 w-3 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="font-semibold text-sm text-primary">Normal Operations</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="p-4 md:p-6 lg:p-8 space-y-8 flex-grow">
+                <!-- KPI Cards -->
+                <div id="kpi-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- KPI cards will be dynamically generated here -->
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 card p-6 rounded-xl shadow-sm fade-in">
+                        <h3 id="chart1-title" class="text-lg font-semibold text-primary">Departmental Budget Overview</h3>
+                        <div class="h-80"><canvas id="mainChart"></canvas></div>
+                    </div>
+                    <div class="card p-6 rounded-xl shadow-sm fade-in">
+                        <h3 id="chart2-title" class="text-lg font-semibold text-primary">Service Request Categories</h3>
+                        <div class="h-80"><canvas id="secondaryChart"></canvas></div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity & Key Projects -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div class="lg:col-span-3 card rounded-xl shadow-sm fade-in">
+                         <div class="p-6">
+                             <h3 id="table-title" class="text-lg font-semibold text-primary">Recent Council Actions</h3>
+                             <p id="table-subtitle" class="text-sm text-secondary">Key resolutions from the last meeting.</p>
+                         </div>
+                         <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead id="table-head">
+                                    <!-- Table header will be generated here -->
+                                </thead>
+                                <tbody id="table-body">
+                                    <!-- Table body will be generated here -->
+                                </tbody>
+                            </table>
+                         </div>
+                    </div>
+                    <div class="lg:col-span-2 card p-6 rounded-xl shadow-sm fade-in">
+                        <h3 id="projects-title" class="text-lg font-semibold text-primary">Capital Improvement Projects</h3>
+                        <div id="projects-body" class="space-y-6 mt-4">
+                           <!-- Project progress bars will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set current date
+            document.getElementById('current-date').textContent = dayjs().format('dddd, MMMM D, YYYY');
+
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            if (menuToggle && sidebar && sidebarOverlay) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                });
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebarOverlay.classList.add('hidden');
+                });
+            }
+            
+            // --- DYNAMIC DASHBOARD DATA ---
+            const departmentData = {
+                dashboard: {
+                    title: "City Manager Dashboard",
+                    kpis: [
+                        { title: "Budget Utilization", value: "78%", subtext: "Fiscal Year-to-Date", icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01', color: 'text-green-500' },
+                        { title: "Service Requests", value: "34 Open", subtext: "215 closed this month", icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', color: 'text-blue-500' },
+                        { title: "Public Safety", value: "-2.3%", subtext: "Incident rate change MoM", icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', color: 'text-red-500' },
+                        { title: "Resident Satisfaction", value: "85%", subtext: "Q3 Survey Results", icon: 'M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-yellow-500' }
+                    ],
+                    chart1: { title: "Departmental Budget Overview", type: 'bar', data: { labels: ['Public Safety', 'Public Works', 'Parks & Rec', 'Community Dev.', 'Admin'], datasets: [{ label: 'Allocated Budget ($M)', data: [15.2, 12.5, 8.1, 5.5, 6.2], backgroundColor: 'rgba(79, 70, 229, 0.8)' }, { label: 'Actual Spending ($M)', data: [14.8, 11.9, 7.5, 5.6, 5.9], backgroundColor: 'rgba(16, 185, 129, 0.8)' }] } },
+                    chart2: { title: "Service Request Categories", type: 'doughnut', data: { labels: ['Streets', 'Utilities', 'Parks', 'Code Enforcement', 'Other'], datasets: [{ data: [45, 25, 15, 10, 5], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6b7280'] }] } },
+                    table: { title: "Recent Council Actions", subtitle: "Key resolutions from the last meeting.", headers: ["Resolution No.", "Subject", "Status", "Date"], rows: [["23-105", "Zoning change for mixed-use development", "Passed", "2023-10-24"], ["23-106", "Contract for park renovation", "Passed", "2023-10-24"], ["23-107", "Water conservation ordinance update", "Tabled", "2023-10-24"], ["23-108", "Approval of annual street fair", "Passed", "2023-10-24"]] },
+                    projects: { title: "Capital Improvement Projects", items: [{ name: "New Library Construction", progress: 75, color: "bg-blue-600" }, { name: "Main Street Revitalization", progress: 40, color: "bg-yellow-400" }, { name: "Smith Park Upgrades", progress: 95, color: "bg-green-500" }, { name: "Wastewater Plant Expansion", progress: 22, color: "bg-red-500" }] }
+                },
+                public_works: {
+                    title: "Public Works Dashboard",
+                    kpis: [
+                        { title: "Potholes Repaired", value: "152", subtext: "This month", icon: 'M-2,2a2,2,0,1,1,4,0a2,2,0,1,1,-4,0M10,2a2,2,0,1,1,4,0a2,2,0,1,1,-4,0M22,2a2,2,0,1,1,4,0a2,2,0,1,1,-4,0M2,10a2,2,0,1,1,4,0a2,2,0,1,1,-4,0M14,10a2,2,0,1,1,4,0a2,2,0,1,1,-4,0M2,22a2,2,0,1,1,4,0a2,2,0,1,1,-4,0M10,22a2,2,0,1,1,4,0a2,2,0,1,1,-4,0M22,22a2,2,0,1,1,4,0a2,2,0,1,1,-4,0', color: 'text-yellow-500' },
+                        { title: "Graffiti Removals", value: "48", subtext: "This month", icon: 'M14,4L12,2L2,12L4,14M18.5,5.5L20,4L14,10L12.5,8.5M7,15L2,20H9L11,18', color: 'text-blue-500' },
+                        { title: "Water Main Breaks", value: "3", subtext: "Last 7 days", icon: 'M12,20a8,8,0,0,1,-8,-8c0,-4.42,8,-12,8,-12s8,7.58,8,12a8,8,0,0,1,-8,8Z M12,14a3,3,0,0,0,3,-3c0,-1.66,-3,-5,-3,-5s-3,3.34,-3,5a3,3,0,0,0,3,3Z', color: 'text-red-500' },
+                        { title: "Fleet Readiness", value: "96%", subtext: "Vehicles operational", icon: 'M20,8H4V6H20M20,18H4V12H20M20,4H4A2,2,0,0,0,2,6V18A2,2,0,0,0,4,20H20A2,2,0,0,0,22,18V6A2,2,0,0,0,20,4Z', color: 'text-green-500' }
+                    ],
+                    chart1: { title: "Monthly Work Orders", type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Completed', data: [210, 250, 230, 280, 260, 300], backgroundColor: 'rgba(79, 70, 229, 0.8)', tension: 0.3 }, { label: 'New', data: [220, 240, 235, 270, 265, 290], backgroundColor: 'rgba(239, 68, 68, 0.8)', tension: 0.3 }] } },
+                    chart2: { title: "Budget vs. Actual", type: 'bar', data: { labels: ['Streets', 'Water', 'Sanitation', 'Fleet'], datasets: [{ label: 'Budget ($k)', data: [1200, 1500, 900, 450], backgroundColor: '#3b82f6' }, { label: 'Actual ($k)', data: [1150, 1480, 850, 460], backgroundColor: '#10b981' }] } },
+                    table: { title: "Major Contracts Out for Bid", subtitle: "Upcoming capital projects.", headers: ["Project", "Department", "Est. Value", "Bid Deadline"], rows: [["Street Resurfacing FY24", "Streets", "$2.5M", "2023-11-15"], ["Sewer Line Replacement", "Water", "$1.8M", "2023-11-20"], ["City Fleet Vehicle Purchase", "Fleet", "$750k", "2023-12-01"]] },
+                    projects: { title: "Active Public Works Projects", items: [{ name: "Rosemead Blvd Paving", progress: 85, color: "bg-green-500" }, { name: "Lift Station #3 Upgrade", progress: 50, color: "bg-yellow-400" }, { name: "Sidewalk ADA Compliance", progress: 25, color: "bg-red-500" }] }
+                },
+                parks_rec: {
+                    title: "Parks & Recreation Dashboard",
+                    kpis: [
+                        { title: "Park Visitors", value: "12,480", subtext: "Last month", icon: 'M12,2A10,10,0,0,0,2,12A10,10,0,0,0,12,22A10,10,0,0,0,22,12A10,10,0,0,0,12,2M12,4A8,8,0,0,1,20,12A8,8,0,0,1,12,20A8,8,0,0,1,4,12A8,8,0,0,1,12,4M12,6A6,6,0,0,0,6,12A6,6,0,0,0,12,18A6,6,0,0,0,18,12A6,6,0,0,0,12,6Z', color: 'text-green-500' },
+                        { title: "Program Enrollment", value: "1,250", subtext: "Fall Season", icon: 'M12,3L1,9L12,15L23,9L12,3M5,10.2V13.8L12,17.6L19,13.8V10.2L12,13.8L5,10.2Z', color: 'text-blue-500' },
+                        { title: "Field Reservations", value: "88%", subtext: "Utilization rate", icon: 'M19,3H5C3.9,3,3,3.9,3,5V19C3,20.1,3.9,21,5,21H19C20.1,21,21,20.1,21,19V5C21,3.9,20.1,3,19,3M19,19H5V5H19V19M15,13H13V15H11V13H9V11H11V9H13V11H15V13Z', color: 'text-yellow-500' },
+                        { title: "Maintenance Tickets", value: "12 Open", subtext: "48 closed this month", icon: 'M20.7,7.2C20.4,6.9,20,6.9,19.7,7.2L12,14.9L9.3,12.2C9,11.9,8.6,11.9,8.3,12.2L7.2,13.3C6.9,13.6,6.9,14,7.2,14.3L11.3,18.4C11.6,18.7,12,18.7,12.3,18.4L21.7,9C22.1,8.7,22.1,8.3,21.7,8L20.7,7.2Z', color: 'text-red-500' }
+                    ],
+                    chart1: { title: "Program Participation by Age Group", type: 'bar', data: { labels: ['Youth', 'Teen', 'Adult', 'Senior'], datasets: [{ label: 'Participants', data: [650, 250, 200, 150], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'] }] } },
+                    chart2: { title: "Park Usage", type: 'pie', data: { labels: ['Pico Park', 'Smith Park', 'Rivera Park', 'Rio Hondo Park'], datasets: [{ data: [35, 25, 20, 20], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'] }] } },
+                    table: { title: "Upcoming Community Events", subtitle: "Plan your visit!", headers: ["Event", "Location", "Date", "Expected Att."], rows: [["Fall Festival", "Pico Park", "2023-10-28", "~5000"], ["Senior Health Fair", "Senior Center", "2023-11-04", "~500"], ["Youth Basketball Finals", "Sports Arena", "2023-11-18", "~1000"]] },
+                    projects: { title: "Current Park Improvements", items: [{ name: "Playground Replacement", progress: 90, color: "bg-green-500" }, { name: "New Pickleball Courts", progress: 60, color: "bg-yellow-400" }, { name: "Walking Trail Lighting", progress: 30, color: "bg-red-500" }] }
+                },
+                finance: {
+                    title: "Finance Department Dashboard",
+                    kpis: [
+                        { title: "Revenue YTD", value: "$45.2M", subtext: "vs $44.8M budgeted", icon: 'M13,16.5V20.5L12,22L11,20.5V16.5H13M17,10.5C17,13.2,15.2,15.5,12.5,15.5H11.5C8.8,15.5,7,13.2,7,10.5C7,7.8,8.8,5.5,11.5,5.5H12.5C15.2,5.5,17,7.8,17,10.5M12,2C17.5,2,22,6.5,22,12S17.5,22,12,22,2,17.5,2,12,6.5,2,12,2Z', color: 'text-green-500' },
+                        { title: "Expenditures YTD", value: "$41.8M", subtext: "92% of revenue", icon: 'M11.5,5.5C8.8,5.5,7,7.8,7,10.5C7,13.2,8.8,15.5,11.5,15.5H12.5C15.2,15.5,17,13.2,17,10.5C17,7.8,15.2,5.5,12.5,5.5H11.5M12,2C6.5,2,2,6.5,2,12S6.5,22,12,22,22,17.5,22,12,17.5,2,12,2Z', color: 'text-red-500' },
+                        { title: "Sales Tax Revenue", value: "+4.1%", subtext: "YoY growth", icon: 'M5,22H19C19.5,22,20,21.5,20,21V3C20,2.5,19.5,2,19,2H5C4.5,2,4,2.5,4,3V21C4,21.5,4.5,22,5,22M12,4C13.1,4,14,4.9,14,6S13.1,8,12,8,10,7.1,10,6,10.9,4,12,4M12,10C13.1,10,14,10.9,14,12S13.1,14,12,14,10,13.1,10,12,10.9,10,12,10M12,16C13.1,16,14,16.9,14,18S13.1,20,12,20,10,19.1,10,18,10.9,16,12,16Z', color: 'text-blue-500' },
+                        { title: "Bond Rating", value: "AA+", subtext: "S&P Global Ratings", icon: 'M12,17.27L18.18,21L17,14.64L22,9.24L15.36,8.27L12,2L8.64,8.27L2,9.24L7,14.64L5.82,21L12,17.27Z', color: 'text-yellow-500' }
+                    ],
+                    chart1: { title: "Revenue by Source", type: 'pie', data: { labels: ['Property Tax', 'Sales Tax', 'Utility Fees', 'Other'], datasets: [{ data: [40, 35, 15, 10], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'] }] } },
+                    chart2: { title: "Monthly Cash Flow", type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Inflow ($M)', data: [5.2, 5.1, 5.5, 6.1, 5.8, 6.5], borderColor: '#10b981', fill: false }, { label: 'Outflow ($M)', data: [4.8, 4.9, 5.2, 5.8, 5.5, 6.2], borderColor: '#ef4444', fill: false }] } },
+                    table: { title: "Recent Bond Issuances", subtitle: "Capital funding overview.", headers: ["Series", "Amount", "Purpose", "Maturity"], rows: [["2023A", "$15M", "Library Construction", "2053"], ["2022B", "$10M", "Street Improvements", "2042"]] },
+                    projects: { title: "Financial System Upgrades", items: [{ name: "New ERP System", progress: 80, color: "bg-green-500" }, { name: "Online Bill Pay Portal", progress: 100, color: "bg-blue-600" }] }
+                },
+                hr: {
+                    title: "Human Resources Dashboard",
+                    kpis: [
+                        { title: "Active Employees", value: "415", subtext: "Full-time staff", icon: 'M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6,8.44 6,9C6,9.56 5.56,10 5,10C4.44,10 4,9.56 4,9C4,8.44 4.44,8 5,8M19,8C19.56,8 20,8.44 20,9C20,9.56 19.56,10 19,10C18.44,10 18,9.56 18,9C18,8.44 18.44,8 19,8M12,14.5C14.67,14.5 19.5,15.83 19.5,18.5V20H4.5V18.5C4.5,15.83 9.33,14.5 12,14.5M2,18.5V20H0V18.5C0,15.83 1,14.5 2,14.5C3,14.5 4,15.83 4,18.5M22,18.5V20H24V18.5C24,15.83 23,14.5 22,14.5C21,14.5 20,15.83 20,18.5Z', color: 'text-blue-500' },
+                        { title: "Open Positions", value: "12", subtext: "8 new, 4 backfill", icon: 'M10,2A2,2 0 0,1 12,4V8A2,2 0 0,1 10,10H4A2,2 0 0,1 2,8V4A2,2 0 0,1 4,2H10M15,14H20V22H15V14M5,14H10V22H5V14M14,4H20A2,2 0 0,1 22,6V12A2,2 0 0,1 20,14H14V4Z', color: 'text-yellow-500' },
+                        { title: "Time to Hire", value: "38 Days", subtext: "Average this quarter", icon: 'M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z', color: 'text-red-500' },
+                        { title: "Employee Turnover", value: "3.2%", subtext: "Annualized rate", icon: 'M12,4C7.58,4 4,7.58 4,12C4,16.42 7.58,20 12,20C16.42,20 20,16.42 20,12C20,7.58 16.42,4 12,4M12,18C8.69,18 6,15.31 6,12C6,8.69 8.69,6 12,6C15.31,6 18,8.69 18,12C18,15.31 15.31,18 12,18M13,8H11V13L15.25,15.25L16,14.05L13,12.25V8Z', color: 'text-green-500' }
+                    ],
+                    chart1: { title: "Headcount by Department", type: 'bar', data: { labels: ['Public Safety', 'Public Works', 'Parks & Rec', 'Community Dev.', 'Admin'], datasets: [{ label: 'Employees', data: [150, 95, 75, 45, 50], backgroundColor: '#4f46e5' }] } },
+                    chart2: { title: "Recruitment Funnel", type: 'bar', data: { labels: ['Applications', 'Screened', 'Interviewed', 'Offered', 'Hired'], datasets: [{ label: 'Candidates', data: [500, 200, 80, 20, 12], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#4f46e5'] }] } },
+                    table: { title: "Open Job Postings", subtitle: "Top priority roles.", headers: ["Position", "Department", "Posted", "Applicants"], rows: [["Civil Engineer", "Public Works", "2023-10-15", "45"], ["Librarian", "Parks & Rec", "2023-10-20", "82"], ["HR Generalist", "Human Resources", "2023-10-22", "112"], ["Planner I", "Community Dev.", "2023-10-25", "65"]] },
+                    projects: { title: "HR Initiatives", items: [{ name: "Performance Review Overhaul", progress: 65, color: "bg-yellow-400" }, { name: "Diversity & Inclusion Training", progress: 95, color: "bg-green-500" }, { name: "Benefits Platform Migration", progress: 20, color: "bg-red-500" }] }
+                }
+            };
+
+            // Chart.js Configuration
+            let mainChart, secondaryChart;
+            const chartConfig = {
+                dark: { gridColor: 'rgba(255, 255, 255, 0.1)', textColor: '#d1d5db', tooltipBg: '#1f2937', tooltipText: '#f9fafb' }
+            };
+
+            function createCharts(chart1Data, chart2Data) {
+                if (mainChart) mainChart.destroy();
+                if (secondaryChart) secondaryChart.destroy();
+
+                const colors = chartConfig.dark;
+                
+                const mainCtx = document.getElementById('mainChart').getContext('2d');
+                mainChart = new Chart(mainCtx, {
+                    type: chart1Data.type,
+                    data: chart1Data.data,
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: colors.gridColor }, ticks: { color: colors.textColor } }, x: { grid: { display: false }, ticks: { color: colors.textColor } } }, plugins: { legend: { labels: { color: colors.textColor } }, tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipText, bodyColor: colors.tooltipText, } } }
+                });
+
+                const secondaryCtx = document.getElementById('secondaryChart').getContext('2d');
+                secondaryChart = new Chart(secondaryCtx, {
+                    type: chart2Data.type,
+                    data: chart2Data.data,
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: colors.textColor, usePointStyle: true } } } }
+                });
+            }
+
+            function updateDashboard(department) {
+                const data = departmentData[department];
+                
+                // Update header
+                document.getElementById('dashboard-title').textContent = data.title;
+
+                // Update KPIs
+                const kpiGrid = document.getElementById('kpi-grid');
+                kpiGrid.innerHTML = '';
+                data.kpis.forEach((kpi, index) => {
+                    const kpiCard = `
+                        <div class="card p-6 rounded-xl shadow-sm fade-in" style="animation-delay: ${index * 0.1}s;">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-medium text-secondary">${kpi.title}</h3>
+                                <svg class="h-6 w-6 ${kpi.color}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="${kpi.icon}" /></svg>
+                            </div>
+                            <p class="text-3xl font-bold mt-2 text-primary">${kpi.value}</p>
+                            <p class="text-xs text-secondary flex items-center mt-2">${kpi.subtext}</p>
+                        </div>`;
+                    kpiGrid.innerHTML += kpiCard;
+                });
+
+                // Update Charts
+                document.getElementById('chart1-title').textContent = data.chart1.title;
+                document.getElementById('chart2-title').textContent = data.chart2.title;
+                createCharts(data.chart1, data.chart2);
+                
+                // Update Table
+                document.getElementById('table-title').textContent = data.table.title;
+                document.getElementById('table-subtitle').textContent = data.table.subtitle;
+                const tableHead = document.getElementById('table-head');
+                tableHead.innerHTML = `<tr>${data.table.headers.map(h => `<th scope="col" class="px-6 py-3">${h}</th>`).join('')}</tr>`;
+                const tableBody = document.getElementById('table-body');
+                tableBody.innerHTML = '';
+                data.table.rows.forEach(row => {
+                    const rowHtml = `<tr class="border-b dark:border-gray-700">${row.map((cell, i) => `<td class="px-6 py-4 ${i === 0 ? 'font-medium text-primary' : 'text-secondary'} whitespace-nowrap">${cell}</td>`).join('')}</tr>`;
+                    tableBody.innerHTML += rowHtml;
+                });
+
+                // Update Projects
+                document.getElementById('projects-title').textContent = data.projects.title;
+                const projectsBody = document.getElementById('projects-body');
+                projectsBody.innerHTML = '';
+                data.projects.items.forEach(project => {
+                    const projectHtml = `
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-primary">${project.name}</span>
+                                <span class="text-sm font-medium text-primary">${project.progress}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                <div class="${project.color} h-2.5 rounded-full" style="width: ${project.progress}%"></div>
+                            </div>
+                        </div>`;
+                    projectsBody.innerHTML += projectHtml;
+                });
+                
+                // Update active link in sidebar
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('bg-indigo-900', 'text-indigo-300');
+                    link.classList.add('text-secondary', 'hover:bg-gray-700');
+                });
+                const activeLink = document.querySelector(`.nav-link[data-department="${department}"]`);
+                activeLink.classList.add('bg-indigo-900', 'text-indigo-300');
+                activeLink.classList.remove('text-secondary', 'hover:bg-gray-700');
+            }
+
+            // Navigation event listener
+            document.getElementById('sidebar-nav').addEventListener('click', (e) => {
+                const navLink = e.target.closest('.nav-link');
+                if (navLink) {
+                    e.preventDefault();
+                    const department = navLink.dataset.department;
+                    updateDashboard(department);
+                     if (window.innerWidth < 1024) { // Close sidebar on mobile after click
+                        sidebar.classList.add('-translate-x-full');
+                        sidebarOverlay.classList.add('hidden');
+                    }
+                }
+            });
+
+            // Status Indicator Logic
+            const statuses = ['normal', 'watch', 'emergency'];
+            let currentStatusIndex = 0;
+
+            window.updateStatusIndicator = (status) => {
+                const indicator = document.getElementById('status-indicator');
+                const dot = indicator.querySelector('span:first-child');
+                const text = indicator.querySelector('span:last-child');
+                
+                dot.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500', 'animate-pulse');
+
+                switch (status) {
+                    case 'watch':
+                        dot.classList.add('bg-yellow-500', 'animate-pulse');
+                        text.textContent = 'Elevated Watch';
+                        break;
+                    case 'emergency':
+                        dot.classList.add('bg-red-500', 'animate-pulse');
+                        text.textContent = 'Emergency Declared';
+                        break;
+                    default: // 'normal'
+                        dot.classList.add('bg-green-500');
+                        text.textContent = 'Normal Operations';
+                        break;
+                }
+            }
+            
+            // Example: Make status clickable to cycle through states
+            window.cycleStatus = () => {
+                currentStatusIndex = (currentStatusIndex + 1) % statuses.length;
+                updateStatusIndicator(statuses[currentStatusIndex]);
+            };
+
+
+            // Initial load
+            updateDashboard('dashboard');
+            updateStatusIndicator('normal');
+        });
+    </script>
+</body>
+</html>
+
