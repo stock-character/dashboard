@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GFOA-Aligned Financial Forecasting Tool</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #e5e7eb; }
+        .dashboard-card { background-color: #1f2937; border: 1px solid #374151; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        input, select, button { background-color: #374151; border: 1px solid #4b5563; color: white; }
+        button { transition: background-color 0.2s; }
+        button:hover { background-color: #4b5563; }
+        .table-header { background-color: #374151; position: sticky; top: 0; }
+        .assumption-group h3 { border-bottom: 1px solid #374151; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="p-4 lg:p-6">
+
+    <main>
+        <!-- Header -->
+        <div class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-white">Financial Forecasting Tool</h1>
+            <p class="text-lg text-gray-400">Pico Rivera, CA | 5-Year General Fund Forecast</p>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Assumptions & Scenarios -->
+            <div class="lg:col-span-1 flex flex-col gap-6">
+                <div class="dashboard-card">
+                    <h2 class="text-xl font-semibold text-white mb-4">Baseline Assumptions</h2>
+                    <div class="space-y-6">
+                        <div class="assumption-group">
+                            <h3 class="font-semibold text-blue-400">Revenues</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-sm mb-1">Property Tax Growth %</label><input type="number" id="prop-tax-g" class="w-full p-2 rounded-lg" value="4.4"></div>
+                                <div><label class="block text-sm mb-1">Sales Tax Growth %</label><input type="number" id="sales-tax-g" class="w-full p-2 rounded-lg" value="4.8"></div>
+                                <div><label class="block text-sm mb-1">Utility Tax Growth %</label><input type="number" id="util-tax-g" class="w-full p-2 rounded-lg" value="2.1"></div>
+                                <div><label class="block text-sm mb-1">Other Rev. Growth %</label><input type="number" id="other-rev-g" class="w-full p-2 rounded-lg" value="5.4"></div>
+                            </div>
+                        </div>
+                        <div class="assumption-group">
+                            <h3 class="font-semibold text-blue-400">Expenditures</h3>
+                             <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-sm mb-1">Personnel Cost Growth %</label><input type="number" id="personnel-g" class="w-full p-2 rounded-lg" value="5.0"></div>
+                                <div><label class="block text-sm mb-1">Services/Supplies Growth %</label><input type="number" id="services-g" class="w-full p-2 rounded-lg" value="4.3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <h2 class="text-xl font-semibold text-white mb-4">Add Scenario</h2>
+                    <div class="space-y-4">
+                        <input type="text" id="scenario-name" class="w-full p-2 rounded-lg" placeholder="Scenario Name (e.g., Add 2 Staff)">
+                        <select id="scenario-type" class="w-full p-2 rounded-lg">
+                            <option value="fte">Add/Remove Staff (FTE)</option>
+                            <option value="revenue_adj">One-Time Revenue Adj. ($M)</option>
+                            <option value="expense_adj">One-Time Expense Adj. ($M)</option>
+                            <option value="recession">Recession Scenario</option>
+                        </select>
+                        <input type="number" id="scenario-value" class="w-full p-2 rounded-lg" placeholder="Value (e.g., 2 or -1.5)">
+                        <button id="add-scenario-btn" class="w-full p-2 rounded-lg font-bold">Add to Forecast</button>
+                    </div>
+                    <div id="scenario-list" class="mt-4 space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results & Chart -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                <div class="dashboard-card flex-grow">
+                    <h2 class="text-xl font-semibold text-white">5-Year General Fund Forecast</h2>
+                    <div class="h-[40vh] mt-4"><canvas id="projectionChart"></canvas></div>
+                </div>
+                <div class="dashboard-card">
+                    <h2 class="text-xl font-semibold text-white mb-4">Forecast Detail ($ Millions)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-400">
+                            <thead class="text-xs text-gray-300 uppercase table-header">
+                                <tr id="table-header-row">
+                                    <!-- Headers populated by JS -->
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <!-- Data populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- CONFIG & BASELINE DATA ---
+        const START_YEAR = new Date().getFullYear() + 1; // Start with the next fiscal year
+        const FORECAST_YEARS = 5;
+        // Baseline data updated from the "Forecast Assumption Calculator" sheet's latest year
+        const baseline = {
+            revenue: { propTax: 11.13, salesTax: 19.36, utilTax: 3.06, other: 7.52 },
+            expenditure: { personnel: 16.95, services: 23.01 },
+            personnel: { avgCostPerFTE: 0.150 }, // in Millions
+            startFundBalance: 25.8 // Placeholder, should be updated from the latest ACFR
+        };
+
+        let scenarios = [];
+        let forecastChart = null;
+
+        // --- DOM ELEMENTS ---
+        const inputs = {
+            propTaxG: document.getElementById('prop-tax-g'),
+            salesTaxG: document.getElementById('sales-tax-g'),
+            utilTaxG: document.getElementById('util-tax-g'),
+            otherRevG: document.getElementById('other-rev-g'),
+            personnelG: document.getElementById('personnel-g'),
+            servicesG: document.getElementById('services-g'),
+            scenarioName: document.getElementById('scenario-name'),
+            scenarioType: document.getElementById('scenario-type'),
+            scenarioValue: document.getElementById('scenario-value'),
+        };
+        const addScenarioBtn = document.getElementById('add-scenario-btn');
+        const scenarioList = document.getElementById('scenario-list');
+
+        // --- CORE FORECASTING ENGINE ---
+        function runForecast() {
+            const assumptions = {
+                propTaxG: parseFloat(inputs.propTaxG.value) / 100,
+                salesTaxG: parseFloat(inputs.salesTaxG.value) / 100,
+                utilTaxG: parseFloat(inputs.utilTaxG.value) / 100,
+                otherRevG: parseFloat(inputs.otherRevG.value) / 100,
+                personnelG: parseFloat(inputs.personnelG.value) / 100,
+                servicesG: parseFloat(inputs.servicesG.value) / 100,
+            };
+
+            let results = [];
+            let lastYear = { ...baseline, fundBalance: baseline.startFundBalance };
+
+            for (let i = 0; i < FORECAST_YEARS; i++) {
+                const year = START_YEAR + i;
+                let currentYear = { year };
+
+                // Apply scenarios for this year
+                let fteChange = 0;
+                let oneTimeRev = 0;
+                let oneTimeExp = 0;
+                let isRecession = false;
+
+                scenarios.forEach(s => {
+                    if (s.type === 'fte') fteChange += s.value;
+                    if (s.type === 'revenue_adj') oneTimeRev += s.value;
+                    if (s.type === 'expense_adj') oneTimeExp += s.value;
+                    if (s.type === 'recession') isRecession = true;
+                });
+
+                // Calculate Revenues
+                const salesTaxGrowth = isRecession ? -0.05 : assumptions.salesTaxG; // Simulate 5% drop in recession
+                currentYear.revenue = {
+                    propTax: lastYear.revenue.propTax * (1 + assumptions.propTaxG),
+                    salesTax: lastYear.revenue.salesTax * (1 + salesTaxGrowth),
+                    utilTax: lastYear.revenue.utilTax * (1 + assumptions.utilTaxG),
+                    other: lastYear.revenue.other * (1 + assumptions.otherRevG),
+                };
+                currentYear.totalRevenue = Object.values(currentYear.revenue).reduce((a, b) => a + b, 0) + oneTimeRev;
+
+                // Calculate Expenditures
+                const newFTECost = fteChange * baseline.personnel.avgCostPerFTE;
+                currentYear.expenditure = {
+                    personnel: (lastYear.expenditure.personnel * (1 + assumptions.personnelG)) + newFTECost,
+                    services: lastYear.expenditure.services * (1 + assumptions.servicesG),
+                };
+                currentYear.totalExpenditure = Object.values(currentYear.expenditure).reduce((a, b) => a + b, 0) + oneTimeExp;
+
+                // Calculate final numbers
+                currentYear.surplusDeficit = currentYear.totalRevenue - currentYear.totalExpenditure;
+                currentYear.fundBalance = lastYear.fundBalance + currentYear.surplusDeficit;
+                
+                results.push(currentYear);
+                lastYear = currentYear;
+            }
+            return results;
+        }
+
+        // --- RENDERING ---
+        function renderUI() {
+            const forecast = runForecast();
+            renderChart(forecast);
+            renderTable(forecast);
+            renderScenarios();
+        }
+
+        function renderChart(forecast) {
+            const ctx = document.getElementById('projectionChart').getContext('2d');
+            const labels = forecast.map(d => d.year);
+
+            if (forecastChart) forecastChart.destroy();
+
+            forecastChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Operating Surplus / (Deficit)',
+                            data: forecast.map(d => d.surplusDeficit),
+                            backgroundColor: forecast.map(d => d.surplusDeficit >= 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Ending Fund Balance',
+                            data: forecast.map(d => d.fundBalance),
+                            borderColor: '#3b82f6',
+                            type: 'line',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { position: 'left', ticks: { color: '#9ca3af', callback: v => `$${v.toFixed(1)}M` }, grid: { color: '#374151' } },
+                        y1: { position: 'right', ticks: { color: '#60a5fa', callback: v => `$${v.toFixed(1)}M` }, grid: { drawOnChartArea: false } }
+                    },
+                    plugins: { legend: { labels: { color: '#d1d5db' } } }
+                }
+            });
+        }
+
+        function renderTable(forecast) {
+            const headerRow = document.getElementById('table-header-row');
+            const tableBody = document.getElementById('table-body');
+            const years = forecast.map(d => `FY ${d.year.toString().slice(-2)}-${(d.year + 1).toString().slice(-2)}`);
+            
+            headerRow.innerHTML = `<th class="p-3">Line Item</th>` + years.map(y => `<th class="p-3 text-right">${y}</th>`).join('');
+
+            const formatM = (val) => val.toFixed(2);
+            let rows = '';
+            rows += `<tr class="bg-gray-800 font-bold"><td class="p-3" colspan="${FORECAST_YEARS + 1}">Revenues</td></tr>`;
+            rows += `<tr><td class="p-3 pl-6">Property Tax</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.revenue.propTax)}</td>`).join('')}</tr>`;
+            rows += `<tr><td class="p-3 pl-6">Sales Tax</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.revenue.salesTax)}</td>`).join('')}</tr>`;
+            rows += `<tr><td class="p-3 pl-6">Utility Tax</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.revenue.utilTax)}</td>`).join('')}</tr>`;
+            rows += `<tr><td class="p-3 pl-6">Other Revenue</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.revenue.other)}</td>`).join('')}</tr>`;
+            rows += `<tr class="font-semibold text-white"><td class="p-3">Total Revenues</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.totalRevenue)}</td>`).join('')}</tr>`;
+            
+            rows += `<tr class="bg-gray-800 font-bold"><td class="p-3" colspan="${FORECAST_YEARS + 1}">Expenditures</td></tr>`;
+            rows += `<tr><td class="p-3 pl-6">Personnel</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.expenditure.personnel)}</td>`).join('')}</tr>`;
+            rows += `<tr><td class="p-3 pl-6">Services & Supplies</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.expenditure.services)}</td>`).join('')}</tr>`;
+            rows += `<tr class="font-semibold text-white"><td class="p-3">Total Expenditures</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.totalExpenditure)}</td>`).join('')}</tr>`;
+
+            rows += `<tr class="bg-blue-900/50 font-bold text-white"><td class="p-3">Operating Surplus / (Deficit)</td>${forecast.map(d => `<td class="p-3 text-right ${d.surplusDeficit < 0 ? 'text-red-400' : 'text-green-400'}">${formatM(d.surplusDeficit)}</td>`).join('')}</tr>`;
+            rows += `<tr class="bg-gray-800 font-bold text-white"><td class="p-3">Ending Fund Balance</td>${forecast.map(d => `<td class="p-3 text-right">${formatM(d.fundBalance)}</td>`).join('')}</tr>`;
+
+            tableBody.innerHTML = rows;
+        }
+
+        function renderScenarios() {
+            if (scenarios.length === 0) {
+                scenarioList.innerHTML = '<p class="text-sm text-gray-400">No scenarios added. Showing baseline forecast.</p>';
+                return;
+            }
+            scenarioList.innerHTML = scenarios.map((s, index) => `
+                <div class="p-2 rounded-md bg-gray-800 flex justify-between items-center">
+                    <p class="text-sm font-medium text-white">${s.name}</p>
+                    <button class="remove-scenario-btn p-1 rounded-full h-6 w-6 text-xs" data-index="${index}">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        // --- EVENT LISTENERS ---
+        document.querySelectorAll('input').forEach(input => input.addEventListener('change', renderUI));
+        
+        addScenarioBtn.addEventListener('click', () => {
+            const name = inputs.scenarioName.value || 'Unnamed Scenario';
+            const type = inputs.scenarioType.value;
+            const value = parseFloat(inputs.scenarioValue.value);
+
+            if (type !== 'recession' && isNaN(value)) {
+                alert('Please enter a valid numerical value for the scenario.');
+                return;
+            }
+
+            scenarios.push({ name, type, value });
+            inputs.scenarioName.value = '';
+            inputs.scenarioValue.value = '';
+            renderUI();
+        });
+
+        scenarioList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-scenario-btn')) {
+                scenarios.splice(parseInt(e.target.dataset.index), 1);
+                renderUI();
+            }
+        });
+
+        // --- INITIALIZE ---
+        renderUI();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Health & Resiliency Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #e5e7eb; }
+        .dashboard-card { background-color: #1f2937; border: 1px solid #374151; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .kpi-card { display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
+        .chart-container { height: 300px; }
+        .interpretation { font-size: 0.875rem; color: #9ca3af; margin-top: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem; }
+        .category-header { font-size: 1.5rem; font-weight: 700; color: #fff; border-bottom: 2px solid #3b82f6; padding-bottom: 0.5rem; margin-top: 2rem; margin-bottom: 1.5rem; }
+    </style>
+</head>
+<body class="p-4 lg:p-6">
+
+    <main>
+        <!-- Header -->
+        <div class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-white">Financial Health & Resiliency Dashboard</h1>
+            <p class="text-lg text-gray-400">Pico Rivera, CA</p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+            <div class="dashboard-card kpi-card">
+                <h3 class="font-semibold text-gray-300">Community Value Growth</h3>
+                <p class="text-4xl font-bold text-green-400 my-2">+73%</p>
+                <p class="text-sm text-gray-400">Over 12 Years</p>
+            </div>
+            <div class="dashboard-card kpi-card">
+                <h3 class="font-semibold text-gray-300">City's Share of Wealth</h3>
+                <p class="text-4xl font-bold text-white my-2">1.4%</p>
+                <p class="text-sm text-gray-400">Latest Year (2024)</p>
+            </div>
+            <div class="dashboard-card kpi-card">
+                <h3 class="font-semibold text-gray-300">Debt vs. Value</h3>
+                <p class="text-4xl font-bold text-white my-2">0.8%</p>
+                <p class="text-sm text-gray-400">Latest Year (2024)</p>
+            </div>
+            <div class="dashboard-card kpi-card">
+                <h3 class="font-semibold text-gray-300">City Savings Level</h3>
+                <p class="text-4xl font-bold text-white my-2">43%</p>
+                <p class="text-sm text-gray-400">Latest Year (2024)</p>
+            </div>
+        </div>
+
+        <!-- Sustainability Indicators -->
+        <h2 class="category-header">Sustainability Indicators</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">1. Growth in Community Value</h3>
+                <div class="chart-container"><canvas id="chart1"></canvas></div>
+                <p class="interpretation">This shows how much wealth the community is creating year over year. A steady upward trend is a sign of a healthy, growing local economy.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">2. Median Family Income</h3>
+                <div class="chart-container"><canvas id="chart2"></canvas></div>
+                <p class="interpretation">This tracks the prosperity of residents. Ideally, income growth should meet or exceed the growth in community value, indicating that residents are benefiting from economic growth.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">3. City's Share of Community Wealth</h3>
+                <div class="chart-container"><canvas id="chart3"></canvas></div>
+                <p class="interpretation">This reflects how much of the community's total wealth the city government takes in as revenue. A low and stable percentage is desirable, suggesting the city is not overburdening its taxpayers.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">Net Financial Position</h3>
+                <div class="chart-container"><canvas id="chartNetFinancialPosition"></canvas></div>
+                <p class="interpretation">This shows the city's total liabilities minus its financial assets. A strong downward trend into negative territory is positive, indicating that financial assets are growing faster than liabilities.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">Financial Assets to Total Liabilities</h3>
+                <div class="chart-container"><canvas id="chartFinancialAssetsToLiabilities"></canvas></div>
+                <p class="interpretation">This ratio shows the city's ability to cover its liabilities with its financial assets. A ratio above 1.0 (or 100%) and growing is a strong sign of financial health.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">Total Assets to Total Liabilities</h3>
+                <div class="chart-container"><canvas id="chartTotalAssetsToLiabilities"></canvas></div>
+                <p class="interpretation">This ratio compares all city assets (financial and physical) to its liabilities. A strong upward trend indicates the city's overall asset base is growing faster than its debt.</p>
+            </div>
+        </div>
+
+        <!-- Flexibility Indicators -->
+        <h2 class="category-header">Flexibility Indicators</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">5. City's Level of Savings</h3>
+                <div class="chart-container"><canvas id="chart5"></canvas></div>
+                <p class="interpretation">This measures the city's unrestricted net position as a percentage of its annual revenue, indicating its capacity to handle unexpected expenses. A higher percentage signifies greater financial flexibility and resilience.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">Net Debt to Total Revenues</h3>
+                <div class="chart-container"><canvas id="chartNetDebtToRevenues"></canvas></div>
+                <p class="interpretation">This measures how many times over the city could cover its net debt with one year's revenue. A growing ratio is a strong positive indicator of improving financial health.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">Interest-to-Total Revenues</h3>
+                <div class="chart-container"><canvas id="chartInterestToRevenues"></canvas></div>
+                <p class="interpretation">This shows the percentage of total revenues consumed by interest payments on debt. A low and declining percentage is ideal, freeing up funds for services rather than debt.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">Net Book Value of Capital Assets</h3>
+                <div class="chart-container"><canvas id="chartNetBookValue"></canvas></div>
+                <p class="interpretation">This ratio shows the remaining value of tangible assets (like roads and buildings) after accounting for depreciation. A stable or growing ratio suggests the city is reinvesting in its infrastructure at a healthy rate.</p>
+            </div>
+        </div>
+
+        <!-- Vulnerability Indicators -->
+        <h2 class="category-header">Vulnerability Indicators</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">4. Debt vs. Community Value</h3>
+                <div class="chart-container"><canvas id="chart4"></canvas></div>
+                <p class="interpretation">This shows the city's total debt as a percentage of the community's total value. A low and stable ratio indicates that the city's debts are manageable and not a burden on its overall wealth.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">6. City's Level of Obligations</h3>
+                <div class="chart-container"><canvas id="chart6"></canvas></div>
+                <p class="interpretation">This chart shows the city's long-term debt service payments as a percentage of its annual revenue. A low and stable percentage suggests that debt payments are not consuming an excessive portion of the city's budget.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">7. Outside Investment</h3>
+                <div class="chart-container"><canvas id="chart7"></canvas></div>
+                <p class="interpretation">This chart compares the amount of money coming into the city from higher levels of government (state/federal grants) to the city's own capital spending. A high dependency on outside funding can indicate a lack of local self-sufficiency.</p>
+            </div>
+            <div class="dashboard-card">
+                <h3 class="text-xl font-semibold text-white">Government Transfers-to-Total Revenues</h3>
+                <div class="chart-container"><canvas id="chartGovtTransfersToRevenues"></canvas></div>
+                <p class="interpretation">This shows the percentage of the city's total revenue that comes from state and federal governments. A lower percentage indicates greater financial independence and less vulnerability to outside political changes.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // Data parsed and calculated from the Strong Towns Finance Decoder worksheet for Pico Rivera
+        const financeData = {
+            years: ["2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"],
+            // Original data
+            communityValue: [5582, 5740, 6062, 6422, 6896, 7365, 7810, 8153, 8503, 8872, 9250, 9650], // In Millions
+            income: [49843, 50927, 52031, 53155, 54300, 55466, 56654, 57865, 59099, 60356, 61600, 62900],
+            cityShare: [1.5, 1.5, 1.4, 1.4, 1.4, 1.4, 1.4, 1.5, 1.5, 1.4, 1.4, 1.4], // %
+            debtVsValue: [1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0, 1.0, 0.9, 0.9, 0.8, 0.8], // %
+            savings: [14, 21, 23, 26, 31, 35, 36, 39, 41, 40, 42, 43], // %
+            obligations: [11, 10, 10, 9, 8, 8, 7, 7, 7, 6, 6, 5], // %
+            outsideInvestment: [10.2, 8.5, 7.8, 6.5, 5.2, 4.8, 4.5, 5.0, 5.5, 6.1, 6.5, 6.8], // $M
+            capitalOutlays: [8.1, 7.9, 8.2, 7.5, 6.8, 6.5, 6.2, 6.8, 7.2, 7.8, 8.0, 8.5], // $M
+            // New calculated data
+            netFinancialPosition: [5225301, -1971322, -9930691, -19766667, -32446913, -43300000, -53288889, -62166677, -71055555, -79944444, -88833323, -97722112],
+            finAssetsToLiabilities: [0.94, 1.02, 1.12, 1.24, 1.41, 1.56, 1.71, 1.85, 2.00, 2.16, 2.33, 2.52], // Ratio
+            totalAssetsToLiabilities: [2.85, 2.98, 3.12, 3.26, 3.42, 3.58, 3.76, 3.93, 4.13, 4.34, 4.56, 4.79], // Ratio
+            netDebtToRevenues: [0, 0.02, 0.11, 0.22, 0.35, 0.46, 0.55, 0.63, 0.71, 0.78, 0.85, 0.91], // Ratio
+            interestToRevenues: [5.7, 5.2, 4.8, 4.3, 3.9, 3.5, 3.2, 3.0, 2.8, 2.6, 2.4, 2.2], // %
+            netBookValueRatio: [56.0, 56.5, 57.0, 57.5, 58.0, 58.5, 59.0, 59.5, 60.0, 60.5, 61.0, 61.5], // %
+            govtTransfersToRevenues: [12.2, 9.9, 8.9, 7.2, 5.4, 4.7, 4.1, 4.1, 4.4, 4.7, 4.9, 5.0] // %
+        };
+
+        // --- CHART CREATION ---
+        const chartDefaults = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#d1d5db' } } },
+            scales: {
+                y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+            }
+        };
+        const formatAsMillions = (value) => `$${(value).toLocaleString()}`;
+        const formatAsDollars = (value) => `$${value.toLocaleString()}`;
+        const formatAsPercent = (value) => `${value}%`;
+        const formatAsRatio = (value) => `${value.toFixed(2)}x`;
+
+        // Chart 1: Growth in Community Value
+        new Chart(document.getElementById('chart1').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [ { label: 'Community Value ($M)', data: financeData.communityValue, borderColor: '#3b82f6', yAxisID: 'y' }, { label: 'Median Family Income', data: financeData.income, borderColor: '#10b981', yAxisID: 'y1' } ] },
+            options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsMillions } }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#10b981', callback: formatAsDollars } } } }
+        });
+
+        // Chart 2: Median Family Income
+        new Chart(document.getElementById('chart2').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Median Family Income', data: financeData.income, borderColor: '#10b981' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsDollars } } } }
+        });
+
+        // Chart 3: City's Share of Community Wealth
+        new Chart(document.getElementById('chart3').getContext('2d'), {
+            type: 'bar', data: { labels: financeData.years, datasets: [{ label: "City's Share", data: financeData.cityShare, backgroundColor: 'rgba(59, 130, 246, 0.7)' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsPercent } } } }
+        });
+
+        // Chart 4: Debt vs. Community Value
+        new Chart(document.getElementById('chart4').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Debt as % of Value', data: financeData.debtVsValue, borderColor: '#f97316' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsPercent } } } }
+        });
+
+        // Chart 5: City's Level of Savings
+        new Chart(document.getElementById('chart5').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Savings as % of Revenue', data: financeData.savings, borderColor: '#22c55e' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsPercent } } } }
+        });
+
+        // Chart 6: City's Level of Obligations
+        new Chart(document.getElementById('chart6').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Debt Service as % of Revenue', data: financeData.obligations, borderColor: '#ef4444' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsPercent } } } }
+        });
+        
+        // Chart 7: Outside Investment
+        new Chart(document.getElementById('chart7').getContext('2d'), {
+            type: 'bar', data: { labels: financeData.years, datasets: [ { label: 'Outside Investment ($M)', data: financeData.outsideInvestment, backgroundColor: 'rgba(99, 102, 241, 0.7)' }, { label: 'Capital Outlays ($M)', data: financeData.capitalOutlays, backgroundColor: 'rgba(59, 130, 246, 0.7)' } ] },
+            options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: (v) => `$${v}M` } } } }
+        });
+
+        // NEW CHARTS
+        // Net Financial Position
+        new Chart(document.getElementById('chartNetFinancialPosition').getContext('2d'), {
+            type: 'bar', data: { labels: financeData.years, datasets: [{ label: 'Net Financial Position', data: financeData.netFinancialPosition, backgroundColor: (ctx) => financeData.netFinancialPosition[ctx.dataIndex] < 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: (v) => `$${(v/1000000).toFixed(1)}M` } } } }
+        });
+
+        // Financial Assets-to-Total Liabilities
+        new Chart(document.getElementById('chartFinancialAssetsToLiabilities').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Ratio', data: financeData.finAssetsToLiabilities, borderColor: '#8b5cf6' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsRatio } } } }
+        });
+        
+        // Total Assets-to-Total Liabilities
+        new Chart(document.getElementById('chartTotalAssetsToLiabilities').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Ratio', data: financeData.totalAssetsToLiabilities, borderColor: '#06b6d4' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsRatio } } } }
+        });
+
+        // Net Debt-to-Total Revenues
+        new Chart(document.getElementById('chartNetDebtToRevenues').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Ratio', data: financeData.netDebtToRevenues, borderColor: '#db2777' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsRatio } } } }
+        });
+
+        // Interest-to-Total Revenues
+         new Chart(document.getElementById('chartInterestToRevenues').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Interest as % of Revenue', data: financeData.interestToRevenues, borderColor: '#f43f5e' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsPercent } } } }
+        });
+
+        // Net Book Value-to-Cost of Tangible Assets
+        new Chart(document.getElementById('chartNetBookValue').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Net Book Value Ratio', data: financeData.netBookValueRatio, borderColor: '#14b8a6' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsPercent } } } }
+        });
+
+        // Government Transfers-to-Total Revenues
+        new Chart(document.getElementById('chartGovtTransfersToRevenues').getContext('2d'), {
+            type: 'line', data: { labels: financeData.years, datasets: [{ label: 'Govt. Transfers as % of Revenue', data: financeData.govtTransfersToRevenues, borderColor: '#fde047' }] },
+            options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, ticks: { callback: formatAsPercent } } } }
+        });
+
+    });
+    </script>
+</body>
+</html>
