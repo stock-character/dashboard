@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City of Pico Rivera - Financial Dashboard</title>
+    <title>City of Pico Rivera - Executive Financial Dashboard</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- D3.js for data manipulation -->
@@ -147,7 +147,7 @@
             <div class="bg-white p-6 rounded-xl shadow-soft mb-8">
                 <h4 class="text-lg font-semibold mb-4 text-blue-800">Revenues</h4>
                 <div class="border rounded-lg overflow-hidden">
-                    <div class="bg-gray-50 p-4 grid grid-cols-12 font-bold text-gray-600 text-sm">
+                    <div class="bg-gray-50 p-4 hidden md:grid md:grid-cols-12 font-bold text-gray-600 text-sm">
                         <span class="col-span-5">Description</span>
                         <span class="col-span-2 text-right">Amended Budget</span>
                         <span class="col-span-2 text-right">Actual Amount</span>
@@ -160,7 +160,7 @@
              <div class="bg-white p-6 rounded-xl shadow-soft">
                 <h4 class="text-lg font-semibold mb-4 text-red-800">Expenses</h4>
                 <div class="border rounded-lg overflow-hidden">
-                    <div class="bg-gray-50 p-4 grid grid-cols-12 font-bold text-gray-600 text-sm">
+                    <div class="bg-gray-50 p-4 hidden md:grid md:grid-cols-12 font-bold text-gray-600 text-sm">
                         <span class="col-span-5">Description</span>
                         <span class="col-span-2 text-right">Amended Budget</span>
                         <span class="col-span-2 text-right">Actual Amount</span>
@@ -359,7 +359,7 @@
 
                 function createRow(name, budget, actual, level, expandable) {
                     const row = document.createElement('div');
-                    row.className = 'drilldown-row grid grid-cols-12 items-center p-4 border-t border-gray-200';
+                    row.className = 'drilldown-row flex flex-col p-4 border-t border-gray-200 md:grid md:grid-cols-12 md:items-center';
                     const variance = budget - actual;
                     const varianceColor = variance >= 0 ? 'text-green-700' : 'text-red-700';
                     let variancePercentageText = '';
@@ -367,16 +367,38 @@
                         const percentage = (variance / budget) * 100;
                         variancePercentageText = `(${percentage.toFixed(1)}%)`;
                     }
-                    let icon = expandable ? `<svg class="icon-arrow h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0-0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>` : `<span class="w-7 mr-2"></span>`;
+                    let icon = expandable ? `<svg class="icon-arrow h-5 w-5 text-gray-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>` : `<span class="w-7 mr-2"></span>`;
                     const paddingLeft = `${level * 1.5}rem`;
+
                     row.innerHTML = `
-                        <div class="col-span-5 flex items-center" style="padding-left: ${paddingLeft};">
-                            ${icon}
-                            <span class="${level === 0 ? 'font-bold' : 'font-normal'} text-gray-800">${name}</span>
+                        <!-- Combined header for mobile and description for desktop -->
+                        <div class="md:col-span-5 flex items-center justify-between w-full md:w-auto" style="padding-left: ${paddingLeft};">
+                            <div class="flex items-center">
+                                ${icon}
+                                <span class="${level === 0 ? 'font-bold' : 'font-normal'} text-gray-800">${name}</span>
+                            </div>
                         </div>
-                        <span class="col-span-2 text-right font-mono text-gray-700 pr-4">${formatUSD.format(budget)}</span>
-                        <span class="col-span-2 text-right font-mono text-gray-700 pr-4">${formatUSD.format(actual)}</span>
-                        <span class="col-span-3 text-right font-mono ${varianceColor} pr-4">
+
+                        <!-- Mobile-only card-style details -->
+                        <div class="md:hidden pl-9 pt-2 space-y-1 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Budget:</span>
+                                <span class="font-mono text-gray-700">${formatUSD.format(budget)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Actual:</span>
+                                <span class="font-mono text-gray-700">${formatUSD.format(actual)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Variance:</span>
+                                <span class="font-mono ${varianceColor}">${formatUSD.format(variance)} ${variancePercentageText}</span>
+                            </div>
+                        </div>
+
+                        <!-- Desktop-only columns -->
+                        <span class="hidden md:block col-span-2 text-right font-mono text-gray-700 pr-4">${formatUSD.format(budget)}</span>
+                        <span class="hidden md:block col-span-2 text-right font-mono text-gray-700 pr-4">${formatUSD.format(actual)}</span>
+                        <span class="hidden md:block col-span-3 text-right font-mono ${varianceColor} pr-4">
                             ${formatUSD.format(variance)}
                             <span class="text-xs ml-1">${variancePercentageText}</span>
                         </span>
